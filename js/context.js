@@ -6,10 +6,11 @@ import {
   SUPPLIERS, TENDERS, EXPENSE_SHEETS, EXPENSE_ITEMS,
   LEAVE_REQUESTS, LEAVE_BALANCES, INVOICE_AUTHORIZATIONS, PURCHASE_ORDERS,
   RATE_CARDS, CONTRACTS, NOTIFICATIONS, ACTIVITY_FEED, TYPOLOGIES,
-  PNL_DATA, PROJECT_PROFITABILITY, TEAM_UTILIZATION
+  PNL_DATA, PROJECT_PROFITABILITY, TEAM_UTILIZATION,
+  ORGANIZATION
 } from './mock-data.js';
 
-const STORAGE_KEY = 'briff_state_v3';
+const STORAGE_KEY = 'briff_state_v4';
 
 const initialState = {
   currentUser: USERS[0],
@@ -43,6 +44,7 @@ const initialState = {
   pnlData: PNL_DATA,
   projectProfitability: PROJECT_PROFITABILITY,
   teamUtilization: TEAM_UTILIZATION,
+  organization: ORGANIZATION,
   toasts: [],
 };
 

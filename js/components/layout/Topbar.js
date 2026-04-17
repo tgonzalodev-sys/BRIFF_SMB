@@ -30,12 +30,13 @@ const BREADCRUMBS = {
 export default function Topbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, notifications } = useAppState();
+  const { currentUser, notifications, timesheetEntries } = useAppState();
   const dispatch = useDispatch();
   const [showNotifs, setShowNotifs] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
 
   const unread = notifications.filter(n => !n.read).length;
+
   const crumbs = (() => {
     const exact = BREADCRUMBS[location.pathname];
     if (exact) return exact;
@@ -47,50 +48,110 @@ export default function Topbar() {
     return [{ label: 'Briff' }];
   })();
 
+  // TimeTracker: hours logged this week for current user
+  const weekDates = ['2026-04-14','2026-04-15','2026-04-16','2026-04-17','2026-04-18'];
+  const weeklyHours = timesheetEntries
+    .filter(e => e.user === currentUser.id && weekDates.includes(e.date))
+    .reduce((s, e) => s + (e.hours || 0), 0);
+  const weeklyTarget = 40;
+  const timerPct = Math.min(Math.round((weeklyHours / weeklyTarget) * 100), 100);
+
   return html`
-    <header style=${{ position: 'fixed', top: 0, left: 240, right: 0, height: 56, background: '#fff', borderBottom: '1px solid #E2E2EC', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', zIndex: 40 }}>
+    <header style=${{
+      position: 'fixed', top: 0, left: 232, right: 0, height: 61,
+      background: '#fff', borderBottom: '1px solid #E5E7EB',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '0 20px', zIndex: 40, gap: 12
+    }}>
       <!-- Breadcrumb -->
-      <nav style=${{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}>
+      <nav style=${{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, flex: 1, minWidth: 0 }}>
         ${crumbs.map((c, i) => html`
           <span key=${i} style=${{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            ${i > 0 && html`<span style=${{ color: '#C0C0CC' }}>/</span>`}
+            ${i > 0 && html`<span style=${{ color: '#D1D5DB', fontSize: 12 }}>/</span>`}
             ${c.path
-              ? html`<button onClick=${() => navigate(c.path)} style=${{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#6B6B80', fontSize: 14, fontFamily: 'DM Sans, sans-serif' }}
-                  onMouseEnter=${e => e.currentTarget.style.color = '#2A2AFF'}
-                  onMouseLeave=${e => e.currentTarget.style.color = '#6B6B80'}>${c.label}</button>`
-              : html`<span style=${{ color: i === crumbs.length - 1 ? '#0A0A0A' : '#6B6B80', fontWeight: i === crumbs.length - 1 ? 500 : 400 }}>${c.label}</span>`
+              ? html`<button onClick=${() => navigate(c.path)}
+                  style=${{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#6B7280', fontSize: 13, fontFamily: 'Host Grotesk, sans-serif' }}
+                  onMouseEnter=${e => e.currentTarget.style.color = '#0046F3'}
+                  onMouseLeave=${e => e.currentTarget.style.color = '#6B7280'}>${c.label}</button>`
+              : html`<span style=${{ color: i === crumbs.length - 1 ? '#111827' : '#6B7280', fontWeight: i === crumbs.length - 1 ? 600 : 400 }}>${c.label}</span>`
             }
           </span>
         `)}
       </nav>
 
-      <!-- Right -->
-      <div style=${{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <button onClick=${() => setShowSearch(true)} style=${{ display: 'flex', alignItems: 'center', gap: 8, background: '#F5F5FA', border: '1px solid #E2E2EC', borderRadius: 8, padding: '7px 14px', cursor: 'pointer', color: '#6B6B80', fontSize: 13, fontFamily: 'DM Sans, sans-serif' }}>
-          🔍 Buscar…<span style=${{ marginLeft: 8, fontSize: 11, background: '#E2E2EC', borderRadius: 4, padding: '1px 6px' }}>⌘K</span>
+      <!-- Right side -->
+      <div style=${{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+
+        <!-- TimeTracker pill -->
+        <div style=${{
+          display: 'flex', alignItems: 'center', gap: 8,
+          border: '1px solid #FFB8D9', borderRadius: 99,
+          background: '#FFF5F8', padding: '5px 12px 5px 10px',
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5638E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span style=${{ fontSize: 12, fontWeight: 500, color: '#F5638E', whiteSpace: 'nowrap' }}>
+            ${weeklyHours}h / ${weeklyTarget}h
+          </span>
+          <div style=${{ width: 56, height: 4, borderRadius: 99, background: '#FFD6E7', overflow: 'hidden' }}>
+            <div style=${{ height: '100%', width: `${timerPct}%`, background: '#F5638E', borderRadius: 99, transition: 'width 0.4s' }} />
+          </div>
+          <button
+            style=${{ background: '#F5638E', border: 'none', borderRadius: 99, padding: '3px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 600, color: '#fff', fontFamily: 'Host Grotesk, sans-serif', whiteSpace: 'nowrap' }}
+            onMouseEnter=${e => e.currentTarget.style.background = '#E0457A'}
+            onMouseLeave=${e => e.currentTarget.style.background = '#F5638E'}>
+            Registrar
+          </button>
+        </div>
+
+        <!-- Search -->
+        <button onClick=${() => setShowSearch(true)}
+          style=${{ display: 'flex', alignItems: 'center', gap: 8, background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', color: '#9CA3AF', fontSize: 13, fontFamily: 'Host Grotesk, sans-serif' }}
+          onMouseEnter=${e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.background = '#F3F4F6'; }}
+          onMouseLeave=${e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = '#F9FAFB'; }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Buscar…
+          <span style=${{ marginLeft: 4, fontSize: 10, background: '#E5E7EB', borderRadius: 4, padding: '1px 5px', color: '#6B7280' }}>⌘K</span>
         </button>
 
+        <!-- Notifications -->
         <div style=${{ position: 'relative' }}>
-          <button onClick=${() => setShowNotifs(!showNotifs)} style=${{ width: 36, height: 36, borderRadius: 8, border: '1px solid #E2E2EC', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, position: 'relative' }}>
-            🔔
-            ${unread > 0 && html`<span style=${{ position: 'absolute', top: 4, right: 4, width: 8, height: 8, borderRadius: '50%', background: '#FF6B2B', border: '1.5px solid #fff' }}/>`}
+          <button onClick=${() => setShowNotifs(!showNotifs)}
+            style=${{ width: 34, height: 34, borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+            onMouseEnter=${e => e.currentTarget.style.background = '#F9FAFB'}
+            onMouseLeave=${e => e.currentTarget.style.background = '#fff'}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            ${unread > 0 && html`
+              <span style=${{ position: 'absolute', top: 5, right: 5, width: 7, height: 7, borderRadius: '50%', background: '#FF6467', border: '1.5px solid #fff' }}/>
+            `}
           </button>
           ${showNotifs && html`
-            <div style=${{ position: 'absolute', right: 0, top: 44, width: 360, background: '#fff', border: '1px solid #E2E2EC', borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 200 }}>
-              <div style=${{ padding: '14px 16px', borderBottom: '1px solid #E2E2EC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style=${{ fontWeight: 600, fontSize: 14 }}>Notificaciones</span>
-                <button onClick=${() => { dispatch({ type: 'MARK_ALL_READ' }); setShowNotifs(false); }} style=${{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#2A2AFF', fontWeight: 500, fontFamily: 'DM Sans, sans-serif' }}>Marcar todo leído</button>
+            <div style=${{ position: 'absolute', right: 0, top: 42, width: 360, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.10)', zIndex: 200 }}>
+              <div style=${{ padding: '12px 16px', borderBottom: '1px solid #F3F4F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style=${{ fontWeight: 600, fontSize: 14, color: '#111827' }}>Notificaciones</span>
+                <button onClick=${() => { dispatch({ type: 'MARK_ALL_READ' }); setShowNotifs(false); }}
+                  style=${{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#0046F3', fontWeight: 500, fontFamily: 'Host Grotesk, sans-serif' }}>
+                  Marcar todo leído
+                </button>
               </div>
               <div style=${{ maxHeight: 360, overflowY: 'auto' }}>
                 ${notifications.slice(0, 6).map(n => html`
-                  <div key=${n.id} onClick=${() => { dispatch({ type: 'MARK_NOTIFICATION_READ', id: n.id }); setShowNotifs(false); navigate(n.link); }}
-                    style=${{ padding: '12px 16px', borderBottom: '1px solid #F0F0F5', cursor: 'pointer', background: n.read ? '#fff' : '#F8F8FF', display: 'flex', gap: 10, alignItems: 'flex-start' }}
-                    onMouseEnter=${e => e.currentTarget.style.background = '#F5F5FA'}
-                    onMouseLeave=${e => e.currentTarget.style.background = n.read ? '#fff' : '#F8F8FF'}>
-                    ${!n.read && html`<div style=${{ width: 6, height: 6, borderRadius: '50%', background: '#2A2AFF', marginTop: 5, flexShrink: 0 }}/>`}
+                  <div key=${n.id}
+                    onClick=${() => { dispatch({ type: 'MARK_NOTIFICATION_READ', id: n.id }); setShowNotifs(false); navigate(n.link); }}
+                    style=${{ padding: '12px 16px', borderBottom: '1px solid #F9FAFB', cursor: 'pointer', background: n.read ? '#fff' : '#EEF4FF', display: 'flex', gap: 10, alignItems: 'flex-start' }}
+                    onMouseEnter=${e => e.currentTarget.style.background = '#F9FAFB'}
+                    onMouseLeave=${e => e.currentTarget.style.background = n.read ? '#fff' : '#EEF4FF'}>
+                    ${!n.read && html`<div style=${{ width: 6, height: 6, borderRadius: '50%', background: '#0046F3', marginTop: 5, flexShrink: 0 }}/>`}
                     <div style=${{ flex: 1 }}>
-                      <div style=${{ fontSize: 13, color: '#0A0A0A', lineHeight: 1.4 }}>${n.text}</div>
-                      <div style=${{ fontSize: 11, color: '#6B6B80', marginTop: 2 }}>${new Date(n.time).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                      <div style=${{ fontSize: 13, color: '#111827', lineHeight: 1.4 }}>${n.text}</div>
+                      <div style=${{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>
+                        ${new Date(n.time).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
                   </div>
                 `)}
@@ -99,7 +160,9 @@ export default function Topbar() {
           `}
         </div>
 
-        <div style=${{ width: 32, height: 32, borderRadius: '50%', background: currentUser.avatar_color || '#2A2AFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer' }} title=${currentUser.name}>
+        <!-- Avatar -->
+        <div style=${{ width: 32, height: 32, borderRadius: '50%', background: currentUser.avatar_color || '#0046F3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', border: '2px solid #E5E7EB' }}
+          title=${currentUser.name}>
           ${initials(currentUser.name)}
         </div>
       </div>
@@ -107,15 +170,19 @@ export default function Topbar() {
       ${showNotifs && html`<div onClick=${() => setShowNotifs(false)} style=${{ position: 'fixed', inset: 0, zIndex: 199 }}/>`}
 
       ${showSearch && html`
-        <div style=${{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.4)', zIndex: 300, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 80 }}
+        <div style=${{ position: 'fixed', inset: 0, background: 'rgba(17,24,39,0.35)', zIndex: 300, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 80 }}
           onClick=${() => setShowSearch(false)}>
-          <div className="modal-enter" onClick=${e => e.stopPropagation()} style=${{ background: '#fff', borderRadius: 12, width: 560, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
-            <div style=${{ display: 'flex', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #E2E2EC', gap: 10 }}>
-              <span style=${{ fontSize: 18, color: '#6B6B80' }}>🔍</span>
-              <input autoFocus placeholder="Buscar proyectos, clientes, estimaciones…" style=${{ border: 'none', outline: 'none', flex: 1, fontSize: 15, color: '#0A0A0A', fontFamily: 'DM Sans, sans-serif' }}/>
-              <span style=${{ fontSize: 12, color: '#6B6B80' }}>ESC para cerrar</span>
+          <div className="modal-enter" onClick=${e => e.stopPropagation()}
+            style=${{ background: '#fff', borderRadius: 12, width: 560, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+            <div style=${{ display: 'flex', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #F3F4F6', gap: 10 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input autoFocus placeholder="Buscar proyectos, clientes, estimaciones…"
+                style=${{ border: 'none', outline: 'none', flex: 1, fontSize: 15, color: '#111827', fontFamily: 'Host Grotesk, sans-serif' }}/>
+              <span style=${{ fontSize: 12, color: '#9CA3AF' }}>ESC para cerrar</span>
             </div>
-            <div style=${{ padding: '48px 24px', textAlign: 'center', color: '#6B6B80', fontSize: 14 }}>Escribe para buscar en Briff…</div>
+            <div style=${{ padding: '48px 24px', textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>Escribe para buscar en Briff…</div>
           </div>
         </div>
       `}

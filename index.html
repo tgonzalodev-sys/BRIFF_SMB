@@ -6,7 +6,7 @@
   <title>Briff — ERP para Agencias</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/globals.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -14,23 +14,28 @@
       theme: {
         extend: {
           colors: {
-            'briff-blue':   '#2A2AFF',
-            'briff-black':  '#0A0A0A',
-            'briff-gray':   '#F0F0F5',
-            'briff-aero':   '#C8D8F0',
-            'briff-navy':   '#1A237E',
-            'briff-lime':   '#CCFF44',
-            'briff-orange': '#FF6B2B',
-            'briff-danger': '#FF3B3B',
+            'brand-primary':   '#0046F3',
+            'brand-secondary': '#011BB8',
+            'brand-tertiary':  '#96B4E6',
+            'brand-light':     '#E0E6F6',
+            'timer-pink':      '#F5638E',
+            'accent-lime':     '#C6EE6A',
+            'accent-orange':   '#FF8041',
           },
           fontFamily: {
-            ui:   ['"DM Sans"', 'sans-serif'],
-            mono: ['"DM Mono"', 'monospace'],
+            display: ['"Space Grotesk"', 'sans-serif'],
+            body:    ['"Host Grotesk"', 'sans-serif'],
+            mono:    ['"JetBrains Mono"', 'monospace'],
           },
           borderRadius: {
-            sm: '6px',
-            md: '10px',
-            lg: '16px',
+            sm:   '6px',
+            md:   '8px',
+            lg:   '12px',
+            xl:   '16px',
+            '2xl':'20px',
+          },
+          boxShadow: {
+            focus: '0 0 0 3px rgba(0,70,243,0.18)',
           }
         }
       }

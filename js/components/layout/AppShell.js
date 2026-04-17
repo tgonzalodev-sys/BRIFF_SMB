@@ -16,10 +16,10 @@ export default function AppShell() {
   return html`
     <div style=${{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <${Sidebar} />
-      <div style=${{ marginLeft: 240, flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style=${{ marginLeft: 232, flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <${Topbar} />
-        <main ref=${contentRef} style=${{ marginTop: 56, flex: 1, overflowY: 'auto', background: '#F5F5FA' }}>
-          <div key=${location.pathname} className="page-enter page-enter-active" style=${{ padding: 24, minHeight: 'calc(100vh - 56px)' }}>
+        <main ref=${contentRef} style=${{ marginTop: 61, flex: 1, overflowY: 'auto', background: '#F3F4F6' }}>
+          <div key=${location.pathname} className="page-enter page-enter-active" style=${{ padding: 24, minHeight: 'calc(100vh - 61px)' }}>
             <${Outlet} />
           </div>
         </main>

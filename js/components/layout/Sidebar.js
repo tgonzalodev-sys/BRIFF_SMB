@@ -11,7 +11,7 @@ const NAV = [
     { path: '/gastos',      label: 'Gastos',      badge: 3 },
   ]},
   { group: 'COMERCIAL', items: [
-    { path: '/crm/clientes', label: 'CRM'          },
+    { path: '/crm/pipeline', label: 'Pipeline CRM' },
     { path: '/estimaciones', label: 'Estimaciones' },
     { path: '/contratos',    label: 'Contratos'    },
     { path: '/proveedores',  label: 'Proveedores'  },
@@ -51,7 +51,6 @@ export default function Sidebar() {
   const dispatch = useDispatch();
 
   function isActive(path) {
-    if (path === '/crm/clientes') return location.pathname.startsWith('/crm');
     return location.pathname === path || location.pathname.startsWith(path + '/');
   }
 

@@ -21,7 +21,8 @@ const NAV = [
     { path: '/finanzas',     label: 'Finanzas'    },
   ]},
   { group: 'EQUIPO', items: [
-    { path: '/personas',     label: 'Personas'    },
+    { path: '/personas',              label: 'Personas'    },
+    { path: '/personas/typologias',   label: 'Typologías'  },
   ]},
   { group: 'CONFIG', items: [
     { path: '/organizacion', label: 'Organización' },

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Briff — ERP para Agencias</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/globals.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'briff-blue':   '#2A2AFF',
+            'briff-black':  '#0A0A0A',
+            'briff-gray':   '#F0F0F5',
+            'briff-aero':   '#C8D8F0',
+            'briff-navy':   '#1A237E',
+            'briff-lime':   '#CCFF44',
+            'briff-orange': '#FF6B2B',
+            'briff-danger': '#FF3B3B',
+          },
+          fontFamily: {
+            ui:   ['"DM Sans"', 'sans-serif'],
+            mono: ['"DM Mono"', 'monospace'],
+          },
+          borderRadius: {
+            sm: '6px',
+            md: '10px',
+            lg: '16px',
+          }
+        }
+      }
+    }
+  </script>
+  <script type="importmap">
+  {
+    "imports": {
+      "react":            "https://esm.sh/react@18.3.1",
+      "react-dom":        "https://esm.sh/react-dom@18.3.1",
+      "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+      "react-router-dom": "https://esm.sh/react-router-dom@6.30.3?external=react,react-dom",
+      "htm":              "https://esm.sh/htm@3.1.1?external=react",
+      "recharts":         "https://esm.sh/recharts@2.15.3?external=react,react-dom",
+      "lucide-react":     "https://esm.sh/lucide-react@0.344.0?external=react"
+    }
+  }
+  </script>
+</head>
+<body class="font-ui antialiased">
+  <div id="root"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

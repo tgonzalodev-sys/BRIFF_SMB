@@ -12,6 +12,7 @@ const NAV = [
   ]},
   { group: 'COMERCIAL', items: [
     { path: '/crm/pipeline', label: 'Pipeline CRM' },
+    { path: '/crm/clientes', label: 'Clientes' },
     { path: '/estimaciones', label: 'Estimaciones' },
     { path: '/contratos',    label: 'Contratos'    },
     { path: '/proveedores',  label: 'Proveedores'  },

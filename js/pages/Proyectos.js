@@ -5,7 +5,8 @@ import PageHeader from '../components/ui/PageHeader.js';
 import StatusBadge from '../components/ui/StatusBadge.js';
 import BurnBar from '../components/ui/BurnBar.js';
 import FilterBar from '../components/ui/FilterBar.js';
-import { useAppState } from '../context.js';
+import ViewToggle from '../components/ui/ViewToggle.js';
+import { useAppState, useCanSee } from '../context.js';
 import { formatARS, formatDate, initials } from '../lib/utils.js';
 
 const TYPE_INFO = {
@@ -39,13 +40,23 @@ function TeamAvatars({ team, users, max = 4 }) {
 }
 
 export default function Proyectos() {
-  const { projects, clients, users } = useAppState();
+  const { projects, clients, users, currentUser, viewAsTier } = useAppState();
+  const canSeeAll = useCanSee();
   const navigate = useNavigate();
   const [search, setSearch]     = useState('');
   const [statusF, setStatusF]   = useState('');
   const [typeF, setTypeF]       = useState('');
+  const showTodosTab = canSeeAll('comercial'); // power_user + admin
+  const [viewMode, setViewMode] = useState(() => showTodosTab ? 'todos' : 'mis');
 
-  const filtered = projects.filter(p => {
+  // When tier changes (user selector), reset viewMode to appropriate default
+  const effectiveMode = showTodosTab ? viewMode : 'mis';
+
+  const baseProjects = effectiveMode === 'mis'
+    ? projects.filter(p => p.team && p.team.includes(currentUser.id))
+    : projects;
+
+  const filtered = baseProjects.filter(p => {
     const cl = clients.find(c => c.id === p.client);
     const matchSearch = !search ||
       p.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -55,20 +66,29 @@ export default function Proyectos() {
     return matchSearch && matchStatus && matchType;
   });
 
-  const active    = projects.filter(p => p.status === 'active').length;
-  const totalBudget = projects.reduce((s, p) => s + (p.budget_ars || 0), 0);
-  const totalPlanned = projects.reduce((s, p) => s + p.planned_hours, 0);
-  const totalActual  = projects.reduce((s, p) => s + p.actual_hours, 0);
+  const active    = baseProjects.filter(p => p.status === 'active').length;
+  const totalBudget = baseProjects.reduce((s, p) => s + (p.budget_ars || 0), 0);
+  const totalPlanned = baseProjects.reduce((s, p) => s + p.planned_hours, 0);
+  const totalActual  = baseProjects.reduce((s, p) => s + p.actual_hours, 0);
 
   return html`
     <div>
       <${PageHeader}
         title="Proyectos"
-        subtitle="Gestión de proyectos del estudio"
+        subtitle=${effectiveMode === 'mis' ? 'Mis proyectos asignados' : 'Gestión de proyectos del estudio'}
         actions=${html`
-          <button style=${{ background: '#0046F3', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif' }}>
-            + Nuevo Proyecto
-          </button>
+          <div style=${{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            ${showTodosTab && html`
+              <${ViewToggle}
+                tabs=${[{ key: 'mis', label: 'Mis Proyectos' }, { key: 'todos', label: 'Todos' }]}
+                active=${effectiveMode}
+                onChange=${setViewMode}
+              />
+            `}
+            <button style=${{ background: '#0046F3', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif' }}>
+              + Nuevo Proyecto
+            </button>
+          </div>
         `}
       />
 

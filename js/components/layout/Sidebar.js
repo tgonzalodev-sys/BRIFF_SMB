@@ -1,34 +1,42 @@
 import { html } from '../../lib/html.js';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAppState, useDispatch } from '../../context.js';
+import { useAppState, useDispatch, canSee } from '../../context.js';
 import { initials } from '../../lib/utils.js';
 
+// minTier: which tiers can see this group. OPERACIONES has no restriction.
 const NAV = [
-  { group: 'OPERACIONES', items: [
+  { group: 'OPERACIONES', section: null, items: [
+    { path: '/dashboard',   label: 'Inicio'        },
     { path: '/proyectos',   label: 'Proyectos'     },
     { path: '/timesheets',  label: 'Timesheets',  badge: 2 },
     { path: '/licencias',   label: 'Licencias'    },
     { path: '/gastos',      label: 'Gastos',      badge: 3 },
   ]},
-  { group: 'COMERCIAL', items: [
+  { group: 'COMERCIAL', section: 'comercial', items: [
     { path: '/crm/pipeline', label: 'Pipeline CRM' },
     { path: '/crm/clientes', label: 'Clientes' },
     { path: '/estimaciones', label: 'Estimaciones' },
     { path: '/contratos',    label: 'Contratos'    },
     { path: '/proveedores',  label: 'Proveedores'  },
   ]},
-  { group: 'FINANZAS', items: [
+  { group: 'FINANZAS', section: 'finanzas', items: [
     { path: '/facturacion',  label: 'Facturación', badge: 2 },
     { path: '/finanzas',     label: 'Finanzas'    },
   ]},
-  { group: 'EQUIPO', items: [
+  { group: 'EQUIPO', section: 'equipo', items: [
     { path: '/personas',              label: 'Personas'    },
     { path: '/personas/typologias',   label: 'Typologías'  },
   ]},
-  { group: 'CONFIG', items: [
+  { group: 'CONFIG', section: 'config', items: [
     { path: '/organizacion', label: 'Organización' },
   ]},
 ];
+
+const TIER_LABEL = {
+  admin:       { label: 'Admin',       color: '#0046F3', bg: 'rgba(0,70,243,0.15)' },
+  power_user:  { label: 'Power User',  color: '#8E51FF', bg: 'rgba(142,81,255,0.15)' },
+  team_member: { label: 'Team Member', color: '#00BC7D', bg: 'rgba(0,188,125,0.15)' },
+};
 
 const ROLE_OPTIONS = [
   { value: 'u1', label: 'Valentina Ros — Directora' },
@@ -49,8 +57,10 @@ const BRIFF_LOGO_WHITE = `<svg xmlns="http://www.w3.org/2000/svg" width="110" he
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser } = useAppState();
+  const { currentUser, viewAsTier } = useAppState();
   const dispatch = useDispatch();
+  const tier = viewAsTier || currentUser?.tier || 'team_member';
+  const tierInfo = TIER_LABEL[tier] || TIER_LABEL.team_member;
 
   function isActive(path) {
     return location.pathname === path || location.pathname.startsWith(path + '/');
@@ -69,7 +79,7 @@ export default function Sidebar() {
 
       <!-- Nav -->
       <nav style=${{ flex: 1, padding: '4px 10px' }}>
-        ${NAV.map(({ group, items }) => html`
+        ${NAV.filter(({ section }) => !section || canSee(tier, section)).map(({ group, items }) => html`
           <div key=${group} style=${{ marginBottom: 4 }}>
             <div style=${{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.08em', padding: '10px 8px 4px', textTransform: 'uppercase' }}>
               ${group}
@@ -118,7 +128,9 @@ export default function Sidebar() {
           </div>
           <div style=${{ minWidth: 0 }}>
             <div style=${{ fontSize: 13, fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>${currentUser.name}</div>
-            <div style=${{ fontSize: 11, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>${currentUser.typology}</div>
+            <div style=${{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+              <span style=${{ fontSize: 10, fontWeight: 700, color: tierInfo.color, background: tierInfo.bg, padding: '1px 6px', borderRadius: 99 }}>${tierInfo.label}</span>
+            </div>
           </div>
         </div>
         <!-- Reset demo link -->

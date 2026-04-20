@@ -10,7 +10,7 @@ import {
   ORGANIZATION
 } from './mock-data.js';
 
-const STORAGE_KEY = 'briff_state_v4';
+const STORAGE_KEY = 'briff_state_v5';
 
 const initialState = {
   currentUser: USERS[0],
@@ -124,13 +124,13 @@ export const AppDispatchContext = createContext(null);
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState, (init) => {
     try {
-      const saved = sessionStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY);
       return saved ? JSON.parse(saved) : init;
     } catch { return init; }
   });
 
   useEffect(() => {
-    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
   }, [state]);
 
   return html`
@@ -150,6 +150,9 @@ export function useToast() {
   return function toast(message, type = 'success') {
     const id = Date.now();
     dispatch({ type: 'ADD_TOAST', toast: { message, kind: type } });
-    setTimeout(() => dispatch({ type: 'REMOVE_TOAST', id }), 3500);
+    // Errors require manual dismiss; all other toasts auto-dismiss after 3.5s
+    if (type !== 'error') {
+      setTimeout(() => dispatch({ type: 'REMOVE_TOAST', id }), 3500);
+    }
   };
 }

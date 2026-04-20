@@ -157,7 +157,7 @@ export default function Organizacion() {
           </div>
 
           <!-- Status badge -->
-          <div style=${{ background: '#F0FDF4', borderRadius: 8, border: '1px solid #BBF7D0', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style=${{ background: '#D0FAE5', borderRadius: 8, border: '1px solid #BBF7D0', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style=${{ width: 8, height: 8, borderRadius: '50%', background: '#009966', flexShrink: 0 }} />
             <div>
               <div style=${{ fontSize: 12, fontWeight: 600, color: '#009966' }}>Configuración activa</div>

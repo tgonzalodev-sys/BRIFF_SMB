@@ -3,25 +3,35 @@ import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
 import { useAppState, useDispatch, useToast } from '../context.js';
 import { formatARS, formatDate } from '../lib/utils.js';
+import FilterBar from '../components/ui/FilterBar.js';
 
 const INVOICE_STATUS = {
-  pending: { label: 'Pendiente', color: '#D97706', bg: '#FFFBEB' },
-  issued:  { label: 'Emitida',   color: '#0046F3', bg: '#EEF4FF' },
-  paid:    { label: 'Cobrada',   color: '#009966', bg: '#F0FDF4' },
+  pending: { label: 'Pendiente', color: '#FE9A00', bg: '#FEF3C6' },
+  issued:  { label: 'Emitida',   color: '#0046F3', bg: '#E0E6F6' },
+  paid:    { label: 'Cobrada',   color: '#009966', bg: '#D0FAE5' },
   overdue: { label: 'Vencida',   color: '#FF6467', bg: '#FFF0F0' },
 };
 
 const PO_STATUS = {
-  pending: { label: 'Pendiente', color: '#D97706', bg: '#FFFBEB' },
-  issued:  { label: 'Emitida',   color: '#0046F3', bg: '#EEF4FF' },
-  paid:    { label: 'Pagada',    color: '#009966', bg: '#F0FDF4' },
+  pending: { label: 'Pendiente', color: '#FE9A00', bg: '#FEF3C6' },
+  issued:  { label: 'Emitida',   color: '#0046F3', bg: '#E0E6F6' },
+  paid:    { label: 'Pagada',    color: '#009966', bg: '#D0FAE5' },
 };
 
 export default function Facturacion() {
   const { invoiceAuthorizations, purchaseOrders, clients, projects, suppliers } = useAppState();
   const dispatch = useDispatch();
   const toast    = useToast();
-  const [tab, setTab] = useState('invoices');
+  const [tab, setTab]       = useState('invoices');
+  const [search, setSearch] = useState('');
+  const [statusF, setStatusF] = useState('');
+
+  const filteredInvoices = invoiceAuthorizations.filter(i => {
+    const cl = clients.find(c => c.id === i.client);
+    const matchSearch = !search || (cl?.name || '').toLowerCase().includes(search.toLowerCase()) || i.number?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = !statusF || i.status === statusF;
+    return matchSearch && matchStatus;
+  });
 
   const totalPaid    = invoiceAuthorizations.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
   const totalIssued  = invoiceAuthorizations.filter(i => i.status === 'issued').reduce((s, i) => s + i.amount, 0);
@@ -63,7 +73,7 @@ export default function Facturacion() {
           ${[
             { label: 'Cobrado',   value: formatARS(totalPaid),    color: '#009966' },
             { label: 'Emitido',   value: formatARS(totalIssued),  color: '#0046F3' },
-            { label: 'Pendiente', value: formatARS(totalPending), color: '#D97706' },
+            { label: 'Pendiente', value: formatARS(totalPending), color: '#FE9A00' },
           ].map(k => html`
             <div key=${k.label} style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', padding: '16px 20px' }}>
               <div style=${{ fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>${k.label}</div>
@@ -72,28 +82,37 @@ export default function Facturacion() {
           `)}
         </div>
 
+        <${FilterBar}
+          search=${search} onSearch=${setSearch}
+          filters=${[
+            { label: 'Estado', value: statusF, onChange: setStatusF, options: [
+              { value: 'pending', label: 'Pendiente' },
+              { value: 'issued',  label: 'Emitida' },
+              { value: 'paid',    label: 'Cobrada' },
+              { value: 'overdue', label: 'Vencida' },
+            ]},
+          ]}
+          count=${filteredInvoices.length}
+        />
+
         <!-- Invoices table -->
-        <div style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB' }}>
-          <div style=${{ padding: '14px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style=${{ margin: 0, fontSize: 14, fontWeight: 600, color: '#111827' }}>Facturas</h2>
-            <span style=${{ fontSize: 12, color: '#9CA3AF' }}>${invoiceAuthorizations.length} facturas</span>
-          </div>
+        <div style=${{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', marginTop: 12 }}>
           <div style=${{ overflowX: 'auto' }}>
           <table style=${{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 900 }}>
             <thead>
-              <tr style=${{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
+              <tr style=${{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
                 ${['Código','Cliente','Proyecto','Fecha','Vencimiento','Neto','IVA','Total','OC Ref.','Estado',''].map(h => html`
                   <th key=${h} style=${{ padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>${h}</th>
                 `)}
               </tr>
             </thead>
             <tbody>
-              ${invoiceAuthorizations.map((inv, i) => {
+              ${filteredInvoices.map((inv, i) => {
                 const client  = clients.find(c => c.id === inv.client);
                 const project = projects.find(p => p.id === inv.project);
                 const info    = INVOICE_STATUS[inv.status] || INVOICE_STATUS.pending;
                 return html`
-                  <tr key=${inv.id} style=${{ borderBottom: i < invoiceAuthorizations.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
+                  <tr key=${inv.id} style=${{ borderBottom: i < filteredInvoices.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
                     <td style=${{ padding: '12px 12px', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: '#374151', fontWeight: 600 }}>${inv.code}</td>
                     <td style=${{ padding: '12px 12px', color: '#374151' }}>${client?.name || '—'}</td>
                     <td style=${{ padding: '12px 12px', color: '#6B7280', fontSize: 12, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>${project?.title || '—'}</td>
@@ -110,7 +129,7 @@ export default function Facturacion() {
                       ${inv.status === 'issued' && html`
                         <button
                           onClick=${() => markPaid(inv.id)}
-                          style=${{ background: '#F0FDF4', border: '1px solid #009966', color: '#009966', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                          style=${{ background: '#D0FAE5', border: '1px solid #009966', color: '#009966', borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                         >Marcar Cobrada</button>
                       `}
                     </td>

@@ -6,6 +6,8 @@ import StatusBadge from '../components/ui/StatusBadge.js';
 import KpiCard from '../components/ui/KpiCard.js';
 import { useAppState } from '../context.js';
 import { formatARS, formatPct, formatDate } from '../lib/utils.js';
+import FilterBar from '../components/ui/FilterBar.js';
+import { SearchX } from 'lucide-react';
 
 const STATUS_FILTERS = [
   { value: 'all',             label: 'Todas' },
@@ -20,7 +22,7 @@ export default function Estimaciones() {
   const { estimates, clients, projects } = useAppState();
   const navigate = useNavigate();
   const [search, setSearch]           = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const filtered = estimates.filter(e => {
     const cl = clients.find(c => c.id === e.client);
@@ -29,7 +31,7 @@ export default function Estimaciones() {
       e.code.toLowerCase().includes(search.toLowerCase()) ||
       (cl?.name  || '').toLowerCase().includes(search.toLowerCase()) ||
       (pr?.title || '').toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || e.status === statusFilter;
+    const matchStatus = !statusFilter || e.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
@@ -56,29 +58,20 @@ export default function Estimaciones() {
         <${KpiCard} label="En Proceso" value=${pending.length} />
       </div>
 
-      <div style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', padding: '12px 16px', marginBottom: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
-        <input
-          type="text"
-          placeholder="Buscar por código, cliente o proyecto…"
-          value=${search}
-          onInput=${e => setSearch(e.target.value)}
-          style=${{ flex: 1, border: '1px solid #E5E7EB', borderRadius: 6, padding: '6px 12px', fontSize: 13, outline: 'none', color: '#111827', fontFamily: 'inherit' }}
-        />
-        <div style=${{ display: 'flex', gap: 4 }}>
-          ${STATUS_FILTERS.map(f => html`
-            <button
-              key=${f.value}
-              onClick=${() => setStatusFilter(f.value)}
-              style=${{
-                padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                border: statusFilter === f.value ? '1.5px solid #0046F3' : '1px solid #E5E7EB',
-                background: statusFilter === f.value ? '#EEF4FF' : '#fff',
-                color: statusFilter === f.value ? '#0046F3' : '#6B7280',
-              }}
-            >${f.label}</button>
-          `)}
-        </div>
-      </div>
+      <${FilterBar}
+        search=${search} onSearch=${setSearch}
+        placeholder="Buscar por código, cliente o proyecto…"
+        filters=${[
+          { label: 'Estado', value: statusFilter, onChange: setStatusFilter, options: [
+            { value: 'draft',             label: 'Borrador' },
+            { value: 'internal_review',   label: 'En revisión' },
+            { value: 'sent_client',       label: 'Al cliente' },
+            { value: 'approved_client',   label: 'Aprobada' },
+            { value: 'rejected',          label: 'Rechazada' },
+          ]},
+        ]}
+        count=${filtered.length}
+      />
 
       <div style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
         <table style=${{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -96,10 +89,12 @@ export default function Estimaciones() {
               return html`
                 <tr
                   key=${e.id}
+                  tabIndex=${0}
                   style=${{ borderBottom: i < filtered.length - 1 ? '1px solid #F3F4F6' : 'none', cursor: 'pointer' }}
                   onMouseEnter=${ev => ev.currentTarget.style.background = '#F9FAFB'}
                   onMouseLeave=${ev => ev.currentTarget.style.background = 'transparent'}
                   onClick=${() => navigate('/estimaciones/' + e.id)}
+                  onKeyDown=${ev => (ev.key === 'Enter' || ev.key === ' ') && navigate('/estimaciones/' + e.id)}
                 >
                   <td style=${{ padding: '12px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 500, color: '#111827' }}>${e.code}</td>
                   <td style=${{ padding: '12px 16px', color: '#374151', fontWeight: 500 }}>${cl?.name || '—'}</td>
@@ -117,8 +112,10 @@ export default function Estimaciones() {
           </tbody>
         </table>
         ${filtered.length === 0 && html`
-          <div style=${{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>
-            No se encontraron estimaciones con estos filtros.
+          <div style=${{ padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <${SearchX} size=${36} strokeWidth=${1.33} color="#D1D5DB" />
+            <div style=${{ fontSize: 15, fontWeight: 600, color: '#374151', marginTop: 4 }}>Sin resultados</div>
+            <div style=${{ fontSize: 13, color: '#9CA3AF' }}>No hay estimaciones que coincidan con los filtros aplicados.</div>
           </div>
         `}
       </div>

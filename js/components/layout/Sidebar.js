@@ -81,19 +81,18 @@ export default function Sidebar() {
                   style=${{
                     width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '7px 10px', borderRadius: 6, border: 'none',
-                    background: active ? 'rgba(0,70,243,0.25)' : 'transparent',
+                    background: active ? 'rgba(0,70,243,0.35)' : 'transparent',
                     color: active ? '#FFFFFF' : 'rgba(255,255,255,0.55)',
                     cursor: 'pointer', marginBottom: 1, textAlign: 'left',
                     fontSize: 13.5, fontWeight: active ? 600 : 400,
                     fontFamily: 'Host Grotesk, sans-serif',
                     transition: 'background 0.12s, color 0.12s',
-                    borderLeft: active ? '2px solid #0046F3' : '2px solid transparent',
                   }}
                   onMouseEnter=${e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.85)'; } }}
                   onMouseLeave=${e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.55)'; } }}>
                   <span>${label}</span>
                   ${badge > 0 && html`
-                    <span style=${{ background: '#0046F3', color: '#fff', borderRadius: 99, fontSize: 10, fontWeight: 700, padding: '1px 6px', minWidth: 18, textAlign: 'center' }}>
+                    <span style=${{ background: '#0046F3', color: '#fff', borderRadius: 9999, fontSize: 10, fontWeight: 700, padding: '1px 6px', minWidth: 18, textAlign: 'center' }}>
                       ${badge}
                     </span>
                   `}
@@ -122,6 +121,13 @@ export default function Sidebar() {
             <div style=${{ fontSize: 11, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>${currentUser.typology}</div>
           </div>
         </div>
+        <!-- Reset demo link -->
+        <button onClick=${() => { localStorage.clear(); location.reload(); }}
+          style=${{ width: '100%', marginTop: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'rgba(255,255,255,0.2)', fontFamily: 'Host Grotesk, sans-serif', textAlign: 'center', padding: '4px 0' }}
+          onMouseEnter=${e => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}
+          onMouseLeave=${e => e.currentTarget.style.color = 'rgba(255,255,255,0.2)'}>
+          Reset demo
+        </button>
       </div>
     </aside>
   `;

@@ -56,8 +56,8 @@ export default function RateCards() {
                   </span>
                   <span style=${{
                     fontWeight: 700,
-                    color: isActive ? '#fff' : (r.currency === 'USD' ? '#059669' : '#0046F3'),
-                    background: isActive ? 'rgba(255,255,255,0.15)' : (r.currency === 'USD' ? '#F0FDF4' : '#EEF4FF'),
+                    color: isActive ? '#fff' : (r.currency === 'USD' ? '#00BC7D' : '#0046F3'),
+                    background: isActive ? 'rgba(255,255,255,0.15)' : (r.currency === 'USD' ? '#D0FAE5' : '#E0E6F6'),
                     padding: '1px 6px', borderRadius: 99,
                   }}>${r.currency}</span>
                 </div>
@@ -77,8 +77,8 @@ export default function RateCards() {
             <div style=${{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
               ${[
                 { label: 'Roles',          value: rc.rates.length.toString(), color: '#111827' },
-                { label: 'Margen promedio', value: avgMargin + '%',           color: avgMargin >= 35 ? '#009966' : '#D97706' },
-                { label: 'Moneda',          value: rc.currency,              color: rc.currency === 'USD' ? '#059669' : '#0046F3' },
+                { label: 'Margen promedio', value: avgMargin + '%',           color: avgMargin >= 35 ? '#009966' : '#FE9A00' },
+                { label: 'Moneda',          value: rc.currency,              color: rc.currency === 'USD' ? '#00BC7D' : '#0046F3' },
               ].map(k => html`
                 <div key=${k.label} style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', padding: '14px 18px' }}>
                   <div style=${{ fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>${k.label}</div>
@@ -104,7 +104,7 @@ export default function RateCards() {
                 <tbody>
                   ${rc.rates.map((rate, i) => {
                     const diff  = rate.sell_hour - rate.cost_hour;
-                    const color = rate.margin_pct >= 40 ? '#009966' : rate.margin_pct >= 33 ? '#D97706' : '#FF6467';
+                    const color = rate.margin_pct >= 40 ? '#009966' : rate.margin_pct >= 33 ? '#FE9A00' : '#FF6467';
                     return html`
                       <tr key=${rate.typology} style=${{ borderBottom: i < rc.rates.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
                         <td style=${{ padding: '14px 16px', fontWeight: 600, color: '#111827' }}>${rate.typology}</td>
@@ -137,7 +137,7 @@ export default function RateCards() {
               <h3 style=${{ margin: '0 0 16px', fontSize: 12, fontWeight: 600, color: '#374151' }}>Margen por Typología</h3>
               <div style=${{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 ${[...rc.rates].sort((a, b) => b.margin_pct - a.margin_pct).map(rate => {
-                  const color = rate.margin_pct >= 40 ? '#009966' : rate.margin_pct >= 33 ? '#D97706' : '#FF6467';
+                  const color = rate.margin_pct >= 40 ? '#009966' : rate.margin_pct >= 33 ? '#FE9A00' : '#FF6467';
                   return html`
                     <div key=${rate.typology}>
                       <div style=${{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>

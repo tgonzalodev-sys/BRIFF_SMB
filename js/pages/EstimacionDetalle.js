@@ -4,6 +4,7 @@ import { html } from '../lib/html.js';
 import StatusBadge from '../components/ui/StatusBadge.js';
 import { useAppState, useDispatch, useToast } from '../context.js';
 import { formatARS, formatPct, formatDate } from '../lib/utils.js';
+import { ArrowLeft, LayoutList } from 'lucide-react';
 
 const STATUS_TRANSITIONS = {
   draft:             [{ to: 'internal_review',   label: 'Enviar a Revisión',       primary: true }],
@@ -32,10 +33,11 @@ export default function EstimacionDetalle() {
 
   const estimate = estimates.find(e => e.id === id);
   if (!estimate) return html`
-    <div style=${{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>
-      <div style=${{ fontSize: 32, marginBottom: 12 }}>◧</div>
-      <div style=${{ fontSize: 14 }}>Estimación no encontrada.</div>
-      <button onClick=${() => navigate('/estimaciones')} style=${{ marginTop: 16, background: '#0046F3', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Volver</button>
+    <div style=${{ padding: '64px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+      <${LayoutList} size=${44} strokeWidth=${1.33} color="#D1D5DB" />
+      <div style=${{ fontSize: 16, fontWeight: 600, color: '#374151', marginTop: 8 }}>Estimación no encontrada</div>
+      <div style=${{ fontSize: 13, color: '#9CA3AF' }}>No se encontró la estimación solicitada.</div>
+      <button onClick=${() => navigate('/estimaciones')} style=${{ marginTop: 8, background: '#0046F3', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Volver</button>
     </div>
   `;
 
@@ -73,7 +75,7 @@ export default function EstimacionDetalle() {
         <button
           onClick=${() => navigate('/estimaciones')}
           style=${{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: 13, padding: 0, display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12, fontFamily: 'inherit' }}
-        >← Volver a Estimaciones</button>
+        ><${ArrowLeft} size=${14} strokeWidth=${1.33} /> Volver a Estimaciones</button>
         <div style=${{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div style=${{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h1 style=${{ fontSize: 22, fontWeight: 600, color: '#111827', margin: 0, fontFamily: 'Space Grotesk, sans-serif' }}>${estimate.code}</h1>
@@ -106,9 +108,10 @@ export default function EstimacionDetalle() {
             </div>
 
             ${deliverables.length === 0 ? html`
-              <div style=${{ padding: 48, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>
-                <div style=${{ fontSize: 28, marginBottom: 8 }}>◧</div>
-                <div>No hay entregables en esta estimación.</div>
+              <div style=${{ padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <${LayoutList} size=${36} strokeWidth=${1.33} color="#D1D5DB" />
+                <div style=${{ fontSize: 14, fontWeight: 600, color: '#374151', marginTop: 4 }}>Sin entregables</div>
+                <div style=${{ fontSize: 13, color: '#9CA3AF' }}>Esta estimación aún no tiene entregables registrados.</div>
               </div>
             ` : deliverables.map((d, di) => {
               const resources  = estimateResources.filter(r => r.deliverable === d.id);

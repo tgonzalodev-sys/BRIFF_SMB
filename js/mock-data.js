@@ -1,11 +1,12 @@
 // ── USERS ────────────────────────────────────────────────────────────────────
+// avatar_color uses Tailwind-v4 500 palette; u1 (currentUser) gets brand blue
 export const USERS = [
-  { id: 'u1', name: 'Valentina Ros',      role: 'Director',         dept: 'Dirección',   typology: 'Directora General',   hourly_cost: 85, email: 'v.ros@estudiocondor.com',       avatar_color: '#2A2AFF' },
-  { id: 'u2', name: 'Matías Ferreyra',    role: 'Account Manager',  dept: 'Cuentas',     typology: 'Account Senior',      hourly_cost: 55, email: 'm.ferreyra@estudiocondor.com',   avatar_color: '#7C3AED' },
-  { id: 'u3', name: 'Lucía Paredes',      role: 'Creative',         dept: 'Creatividad', typology: 'Directora de Arte',   hourly_cost: 60, email: 'l.paredes@estudiocondor.com',    avatar_color: '#059669' },
-  { id: 'u4', name: 'Tomás Blanco',       role: 'Creative',         dept: 'Creatividad', typology: 'Redactor',            hourly_cost: 45, email: 't.blanco@estudiocondor.com',     avatar_color: '#D97706' },
-  { id: 'u5', name: 'Ana Gómez',          role: 'Finance',          dept: 'Finanzas',    typology: 'Administrativa',      hourly_cost: 40, email: 'a.gomez@estudiocondor.com',      avatar_color: '#DC2626' },
-  { id: 'u6', name: 'Diego Núñez',        role: 'Creative',         dept: 'Producción',  typology: 'Motion Designer',     hourly_cost: 50, email: 'd.nunez@estudiocondor.com',      avatar_color: '#0891B2' },
+  { id: 'u1', name: 'Valentina Ros',      role: 'Director',         dept: 'Dirección',   typology: 'Directora General',   hourly_cost: 85, email: 'v.ros@estudiocondor.com',       avatar_color: '#0046F3' },
+  { id: 'u2', name: 'Matías Ferreyra',    role: 'Account Manager',  dept: 'Cuentas',     typology: 'Account Senior',      hourly_cost: 55, email: 'm.ferreyra@estudiocondor.com',   avatar_color: '#8E51FF' },
+  { id: 'u3', name: 'Lucía Paredes',      role: 'Creative',         dept: 'Creatividad', typology: 'Directora de Arte',   hourly_cost: 60, email: 'l.paredes@estudiocondor.com',    avatar_color: '#00BC7D' },
+  { id: 'u4', name: 'Tomás Blanco',       role: 'Creative',         dept: 'Creatividad', typology: 'Redactor',            hourly_cost: 45, email: 't.blanco@estudiocondor.com',     avatar_color: '#FE9A00' },
+  { id: 'u5', name: 'Ana Gómez',          role: 'Finance',          dept: 'Finanzas',    typology: 'Administrativa',      hourly_cost: 40, email: 'a.gomez@estudiocondor.com',      avatar_color: '#FF2056' },
+  { id: 'u6', name: 'Diego Núñez',        role: 'Creative',         dept: 'Producción',  typology: 'Motion Designer',     hourly_cost: 50, email: 'd.nunez@estudiocondor.com',      avatar_color: '#00B8DB' },
 ];
 
 // ── CLIENTS ───────────────────────────────────────────────────────────────────

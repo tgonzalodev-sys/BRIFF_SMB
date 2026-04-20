@@ -147,7 +147,7 @@ table { border-collapse: collapse; width: 100%; }
 *:focus-visible {
   outline: none;
   box-shadow: var(--shadow-focus);
-  border-radius: var(--radius-md);
+  border-radius: inherit;
 }
 
 /* ── TYPE UTILITIES ──────────────────────────────────────────────────────── */
@@ -174,3 +174,12 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   to   { opacity: 1; transform: scale(1); }
 }
 .modal-enter { animation: modalIn var(--dur-med) var(--ease-out) forwards; }
+
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter { animation: pageIn 160ms var(--ease-out) forwards; }
+
+/* Numeric alignment for currency columns */
+.tabular-nums { font-variant-numeric: tabular-nums; }

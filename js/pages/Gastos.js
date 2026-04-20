@@ -1,19 +1,32 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
+import FilterBar from '../components/ui/FilterBar.js';
 import { useAppState } from '../context.js';
 import { formatARS, formatDate, initials } from '../lib/utils.js';
 
 const EXPENSE_STATUS = {
   draft:    { label: 'Borrador',  color: '#6B7280', bg: '#F3F4F6' },
-  pending:  { label: 'Pendiente', color: '#D97706', bg: '#FFFBEB' },
-  approved: { label: 'Aprobado',  color: '#009966', bg: '#F0FDF4' },
+  pending:  { label: 'Pendiente', color: '#FE9A00', bg: '#FEF3C6' },
+  approved: { label: 'Aprobado',  color: '#009966', bg: '#D0FAE5' },
   rejected: { label: 'Rechazado', color: '#FF6467', bg: '#FFF0F0' },
 };
 
 export default function Gastos() {
   const navigate = useNavigate();
   const { expenseSheets, expenseItems, users } = useAppState();
+  const [search, setSearch]   = useState('');
+  const [statusF, setStatusF] = useState('');
+
+  const filteredSheets = expenseSheets.filter(sheet => {
+    const creator = users.find(u => u.id === sheet.created_by);
+    const matchSearch = !search ||
+      sheet.title.toLowerCase().includes(search.toLowerCase()) ||
+      (creator?.name || '').toLowerCase().includes(search.toLowerCase());
+    const matchStatus = !statusF || sheet.status === statusF;
+    return matchSearch && matchStatus;
+  });
 
   const totalApproved = expenseSheets.filter(s => s.status === 'approved').reduce((s, e) => s + e.total, 0);
   const totalPending  = expenseSheets.filter(s => s.status === 'pending').reduce((s, e) => s + e.total, 0);
@@ -37,7 +50,7 @@ export default function Gastos() {
         ${[
           { label: 'Total Registrado',  value: formatARS(totalAll),      color: '#111827' },
           { label: 'Aprobado',          value: formatARS(totalApproved), color: '#009966' },
-          { label: 'Pendiente Aprob.',  value: formatARS(totalPending),  color: '#D97706' },
+          { label: 'Pendiente Aprob.',  value: formatARS(totalPending),  color: '#FE9A00' },
           { label: 'Borradores',        value: formatARS(totalDraft),    color: '#6B7280' },
         ].map(k => html`
           <div key=${k.label} style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', padding: '16px 20px' }}>
@@ -47,30 +60,41 @@ export default function Gastos() {
         `)}
       </div>
 
+      <${FilterBar}
+        search=${search} onSearch=${setSearch}
+        filters=${[
+          { label: 'Estado', value: statusF, onChange: setStatusF, options: [
+            { value: 'draft',    label: 'Borrador' },
+            { value: 'pending',  label: 'Pendiente' },
+            { value: 'approved', label: 'Aprobado' },
+            { value: 'rejected', label: 'Rechazado' },
+          ]},
+        ]}
+        count=${filteredSheets.length}
+      />
+
       <!-- Sheets table -->
-      <div style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
-        <div style=${{ padding: '14px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style=${{ margin: 0, fontSize: 14, fontWeight: 600, color: '#111827' }}>Hojas de Gastos</h2>
-          <span style=${{ fontSize: 12, color: '#9CA3AF' }}>${expenseSheets.length} hojas</span>
-        </div>
+      <div style=${{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', overflow: 'hidden', marginTop: 12 }}>
         <table style=${{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
-            <tr style=${{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
+            <tr style=${{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
               ${['Título', 'Área', 'Período', 'Creado por', 'Estado', 'Total', ''].map(h => html`
                 <th key=${h} style=${{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>${h}</th>
               `)}
             </tr>
           </thead>
           <tbody>
-            ${expenseSheets.map((sheet, i) => {
+            ${filteredSheets.map((sheet, i) => {
               const creator = users.find(u => u.id === sheet.created_by);
               const info    = EXPENSE_STATUS[sheet.status] || EXPENSE_STATUS.draft;
               const itemCount = expenseItems.filter(e => e.sheet === sheet.id).length;
               return html`
                 <tr
                   key=${sheet.id}
+                  tabIndex=${0}
                   onClick=${() => navigate('/gastos/' + sheet.id)}
-                  style=${{ borderBottom: i < expenseSheets.length - 1 ? '1px solid #F3F4F6' : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
+                  onKeyDown=${e => (e.key === 'Enter' || e.key === ' ') && navigate('/gastos/' + sheet.id)}
+                  style=${{ borderBottom: i < filteredSheets.length - 1 ? '1px solid #F3F4F6' : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
                   onMouseEnter=${e => e.currentTarget.style.background = '#F9FAFB'}
                   onMouseLeave=${e => e.currentTarget.style.background = 'transparent'}
                 >

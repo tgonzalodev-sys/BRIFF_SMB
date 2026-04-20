@@ -3,11 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { html } from '../lib/html.js';
 import { useAppState, useDispatch, useToast } from '../context.js';
 import { formatARS, formatDate, initials } from '../lib/utils.js';
+import { ArrowLeft, Receipt, Check } from 'lucide-react';
 
 const EXPENSE_STATUS = {
   draft:    { label: 'Borrador',  color: '#6B7280', bg: '#F3F4F6' },
-  pending:  { label: 'Pendiente', color: '#D97706', bg: '#FFFBEB' },
-  approved: { label: 'Aprobado',  color: '#009966', bg: '#F0FDF4' },
+  pending:  { label: 'Pendiente', color: '#FE9A00', bg: '#FEF3C6' },
+  approved: { label: 'Aprobado',  color: '#009966', bg: '#D0FAE5' },
   rejected: { label: 'Rechazado', color: '#FF6467', bg: '#FFF0F0' },
 };
 
@@ -20,9 +21,9 @@ const STATUS_TRANSITIONS = {
 
 const CATEGORY_COLORS = {
   'Transporte': '#0046F3',
-  'Comidas':    '#D97706',
-  'Materiales': '#7C3AED',
-  'Software':   '#0891B2',
+  'Comidas':    '#FE9A00',
+  'Materiales': '#8E51FF',
+  'Software':   '#00B8DB',
 };
 
 export default function GastoDetalle() {
@@ -37,7 +38,7 @@ export default function GastoDetalle() {
   const sheet = expenseSheets.find(s => s.id === id);
   if (!sheet) return html`
     <div style=${{ padding: 48, textAlign: 'center', color: '#9CA3AF' }}>
-      <div style=${{ fontSize: 28, marginBottom: 8 }}>◻</div>
+      <div style=${{ marginBottom: 8, color: '#D1D5DB' }}><${Receipt} size=${44} strokeWidth=${1.33} /></div>
       <div>Hoja de gastos no encontrada.</div>
       <button onClick=${() => navigate('/gastos')} style=${{ marginTop: 16, background: '#0046F3', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Volver</button>
     </div>
@@ -67,7 +68,7 @@ export default function GastoDetalle() {
     <div>
       <!-- Back + header -->
       <div style=${{ marginBottom: 20 }}>
-        <button onClick=${() => navigate('/gastos')} style=${{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: 13, padding: 0, marginBottom: 12, fontFamily: 'inherit' }}>← Volver a Gastos</button>
+        <button onClick=${() => navigate('/gastos')} style=${{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: 13, padding: 0, marginBottom: 12, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}><${ArrowLeft} size=${14} strokeWidth=${1.33} /> Volver a Gastos</button>
         <div style=${{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
           <div>
             <div style=${{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
@@ -104,7 +105,7 @@ export default function GastoDetalle() {
               ${sheet.status === 'draft' && html`
                 <button
                   onClick=${() => setShowAddItem(v => !v)}
-                  style=${{ background: '#EEF4FF', color: '#0046F3', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style=${{ background: '#E0E6F6', color: '#0046F3', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >+ Agregar Ítem</button>
               `}
             </div>
@@ -180,8 +181,8 @@ export default function GastoDetalle() {
                       <td style=${{ padding: '12px 16px', color: '#374151' }}>${item.description}</td>
                       <td style=${{ padding: '12px 16px', textAlign: 'center' }}>
                         ${item.receipt
-                          ? html`<span style=${{ fontSize: 12, color: '#009966', fontWeight: 600 }}>✓</span>`
-                          : html`<span style=${{ fontSize: 12, color: '#FF6467', fontWeight: 600 }}>✗</span>`
+                          ? html`<span style=${{ color: '#009966', display: 'flex', justifyContent: 'center' }}><${Check} size=${14} strokeWidth=${2.5} /></span>`
+                          : html`<span style=${{ color: '#FF6467', display: 'flex', justifyContent: 'center' }}>—</span>`
                         }
                       </td>
                       <td style=${{ padding: '12px 16px', fontWeight: 700, color: '#111827', fontFamily: 'Space Grotesk, sans-serif' }}>${formatARS(item.amount)}</td>

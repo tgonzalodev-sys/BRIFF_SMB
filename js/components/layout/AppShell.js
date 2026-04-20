@@ -19,7 +19,7 @@ export default function AppShell() {
       <div style=${{ marginLeft: 232, flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <${Topbar} />
         <main ref=${contentRef} style=${{ marginTop: 61, flex: 1, overflowY: 'auto', background: '#F3F4F6' }}>
-          <div key=${location.pathname} className="page-enter page-enter-active" style=${{ padding: 24, minHeight: 'calc(100vh - 61px)' }}>
+          <div key=${location.pathname} className="page-enter" style=${{ padding: 24, minHeight: 'calc(100vh - 61px)' }}>
             <${Outlet} />
           </div>
         </main>

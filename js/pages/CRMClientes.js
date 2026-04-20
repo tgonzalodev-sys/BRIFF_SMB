@@ -1,26 +1,38 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
+import FilterBar from '../components/ui/FilterBar.js';
 import { useAppState } from '../context.js';
 import { formatARS, initials } from '../lib/utils.js';
 
 const STATUS_INFO = {
-  active:   { label: 'Activo',    color: '#009966', bg: '#F0FDF4' },
-  prospect: { label: 'Prospecto', color: '#D97706', bg: '#FFFBEB' },
+  active:   { label: 'Activo',    color: '#009966', bg: '#D0FAE5' },
+  prospect: { label: 'Prospecto', color: '#FE9A00', bg: '#FEF3C6' },
   inactive: { label: 'Inactivo',  color: '#6B7280', bg: '#F3F4F6' },
 };
 
 const INDUSTRY_COLORS = {
-  'Finanzas':    { color: '#0046F3', bg: '#EEF4FF' },
-  'Alimentos':   { color: '#059669', bg: '#F0FDF4' },
-  'Tecnología':  { color: '#0891B2', bg: '#ECFEFF' },
-  'Retail':      { color: '#D97706', bg: '#FFFBEB' },
-  'Salud':       { color: '#7C3AED', bg: '#F5F3FF' },
+  'Finanzas':    { color: '#0046F3', bg: '#E0E6F6' },
+  'Alimentos':   { color: '#00BC7D', bg: '#D0FAE5' },
+  'Tecnología':  { color: '#00B8DB', bg: '#E0F9FF' },
+  'Retail':      { color: '#FE9A00', bg: '#FEF3C6' },
+  'Salud':       { color: '#8E51FF', bg: '#F5F3FF' },
 };
 
 export default function CRMClientes() {
   const navigate = useNavigate();
   const { clients, projects, contracts, users, invoiceAuthorizations } = useAppState();
+  const [search, setSearch]   = useState('');
+  const [statusF, setStatusF] = useState('');
+  const [indF, setIndF]       = useState('');
+
+  const filteredClients = clients.filter(c => {
+    const matchSearch = !search || c.name.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = !statusF || c.status === statusF;
+    const matchInd    = !indF   || c.industry === indF;
+    return matchSearch && matchStatus && matchInd;
+  });
 
   const activeCount   = clients.filter(c => c.status === 'active').length;
   const totalBilled   = invoiceAuthorizations.reduce((s, i) => s + i.amount, 0);
@@ -53,9 +65,28 @@ export default function CRMClientes() {
         `)}
       </div>
 
+      <${FilterBar}
+        search=${search} onSearch=${setSearch}
+        filters=${[
+          { label: 'Estado', value: statusF, onChange: setStatusF, options: [
+            { value: 'active',   label: 'Activo' },
+            { value: 'prospect', label: 'Prospecto' },
+            { value: 'inactive', label: 'Inactivo' },
+          ]},
+          { label: 'Industria', value: indF, onChange: setIndF, options: [
+            { value: 'Finanzas',   label: 'Finanzas' },
+            { value: 'Alimentos',  label: 'Alimentos' },
+            { value: 'Tecnología', label: 'Tecnología' },
+            { value: 'Retail',     label: 'Retail' },
+            { value: 'Salud',      label: 'Salud' },
+          ]},
+        ]}
+        count=${filteredClients.length}
+      />
+
       <!-- Client cards -->
-      <div style=${{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-        ${clients.map(client => {
+      <div style=${{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginTop: 12 }}>
+        ${filteredClients.map(client => {
           const manager       = users.find(u => u.id === client.manager);
           const clientProjects = projects.filter(p => p.client === client.id);
           const activeProjects = clientProjects.filter(p => p.status === 'active' || p.status === 'in_review');
@@ -67,8 +98,11 @@ export default function CRMClientes() {
           return html`
             <div
               key=${client.id}
+              role="button"
+              tabIndex=${0}
               onClick=${() => navigate('/crm/clientes/' + client.id)}
-              style=${{ background: '#fff', borderRadius: 10, border: '1px solid #E5E7EB', padding: 24, cursor: 'pointer', transition: 'box-shadow 0.15s, transform 0.15s' }}
+              onKeyDown=${e => (e.key === 'Enter' || e.key === ' ') && navigate('/crm/clientes/' + client.id)}
+              style=${{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: 24, cursor: 'pointer', transition: 'box-shadow 0.15s, transform 0.15s' }}
               onMouseEnter=${e => { e.currentTarget.style.boxShadow = '0 8px 24px -4px rgba(16,24,40,0.10)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
               onMouseLeave=${e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
             >
@@ -76,7 +110,7 @@ export default function CRMClientes() {
               <div style=${{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
                 <div style=${{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <!-- Logo placeholder -->
-                  <div style=${{ width: 42, height: 42, borderRadius: 10, background: industryInfo.bg, border: '1px solid ' + industryInfo.color + '30', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: industryInfo.color, fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>
+                  <div style=${{ width: 42, height: 42, borderRadius: 12, background: industryInfo.bg, border: '1px solid ' + industryInfo.color + '30', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: industryInfo.color, fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>
                     ${client.code}
                   </div>
                   <div>
@@ -113,7 +147,7 @@ export default function CRMClientes() {
                 </div>
                 <div style=${{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <span style=${{ fontSize: 11, color: '#9CA3AF' }}>Pago: ${client.payment_terms}d</span>
-                  <span style=${{ fontSize: 11, fontWeight: 600, color: client.currency === 'USD' ? '#059669' : '#374151', background: client.currency === 'USD' ? '#F0FDF4' : '#F3F4F6', padding: '1px 7px', borderRadius: 99 }}>${client.currency}</span>
+                  <span style=${{ fontSize: 11, fontWeight: 600, color: client.currency === 'USD' ? '#00BC7D' : '#374151', background: client.currency === 'USD' ? '#D0FAE5' : '#F3F4F6', padding: '1px 7px', borderRadius: 99 }}>${client.currency}</span>
                 </div>
               </div>
             </div>

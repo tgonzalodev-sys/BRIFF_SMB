@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
 import { useAppState, useDispatch, useToast } from '../context.js';
 import { formatARS, formatUSD, formatPct, formatDate, initials } from '../lib/utils.js';
 import { CRM_STAGES } from '../lib/utils.js';
+import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 
 const STAGE_ORDER = ['prospect','qualified','proposal','negotiation','won','lost'];
 
@@ -22,7 +23,7 @@ function Avatar({ name, color, size = 26 }) {
   `;
 }
 
-function LeadCard({ lead, users, onSelect, onMove }) {
+function LeadCard({ lead, users, onSelect, onMove, onDragStart, onDragEnd }) {
   const owner = users.find(u => u.id === lead.owner);
   const stage = CRM_STAGES[lead.stage] || {};
   const stageIdx = STAGE_ORDER.indexOf(lead.stage);
@@ -31,9 +32,12 @@ function LeadCard({ lead, users, onSelect, onMove }) {
 
   return html`
     <div
-      style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', padding: '12px 14px', cursor: 'pointer', transition: 'box-shadow 0.15s, transform 0.15s' }}
-      onMouseEnter=${e => { e.currentTarget.style.boxShadow = '0 4px 12px -2px rgba(16,24,40,0.10)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-      onMouseLeave=${e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
+      draggable=${true}
+      onDragStart=${e => { e.dataTransfer.effectAllowed = 'move'; onDragStart(lead.id); }}
+      onDragEnd=${onDragEnd}
+      style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', padding: '12px 14px', cursor: 'grab', transition: 'box-shadow 0.15s, opacity 0.15s' }}
+      onMouseEnter=${e => { e.currentTarget.style.boxShadow = '0 4px 12px -2px rgba(16,24,40,0.10)'; }}
+      onMouseLeave=${e => { e.currentTarget.style.boxShadow = 'none'; }}
       onClick=${() => onSelect(lead)}
     >
       <div style=${{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6, gap: 8 }}>
@@ -47,7 +51,7 @@ function LeadCard({ lead, users, onSelect, onMove }) {
         <div style=${{ fontSize: 14, fontWeight: 700, color: lead.currency === 'USD' ? '#0046F3' : '#111827', fontFamily: 'Space Grotesk, sans-serif' }}>
           ${fmtValue(lead.value, lead.currency)}
         </div>
-        <div style=${{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: lead.probability >= 60 ? '#F0FDF4' : lead.probability >= 40 ? '#FFF7ED' : '#F3F4F6', color: lead.probability >= 60 ? '#009966' : lead.probability >= 40 ? '#FD9A00' : '#6B7280' }}>
+        <div style=${{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: lead.probability >= 60 ? '#D0FAE5' : lead.probability >= 40 ? '#FEF3C6' : '#F3F4F6', color: lead.probability >= 60 ? '#009966' : lead.probability >= 40 ? '#FD9A00' : '#6B7280' }}>
           ${lead.probability}%
         </div>
       </div>
@@ -59,15 +63,15 @@ function LeadCard({ lead, users, onSelect, onMove }) {
             <button
               title="Etapa anterior"
               onClick=${() => onMove(lead.id, STAGE_ORDER[stageIdx - 1])}
-              style=${{ background: '#F3F4F6', border: 'none', borderRadius: 4, width: 22, height: 22, cursor: 'pointer', fontSize: 11, color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >←</button>
+              style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 22, height: 22, cursor: 'pointer', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            ><${ArrowLeft} size=${12} strokeWidth=${1.5} /></button>
           `}
           ${canNext && html`
             <button
               title="Siguiente etapa"
               onClick=${() => onMove(lead.id, STAGE_ORDER[stageIdx + 1])}
-              style=${{ background: '#EEF4FF', border: 'none', borderRadius: 4, width: 22, height: 22, cursor: 'pointer', fontSize: 11, color: '#0046F3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >→</button>
+              style=${{ background: '#E0E6F6', border: 'none', borderRadius: 6, width: 22, height: 22, cursor: 'pointer', color: '#0046F3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            ><${ArrowRight} size=${12} strokeWidth=${1.5} /></button>
           `}
         </div>
       </div>
@@ -75,7 +79,7 @@ function LeadCard({ lead, users, onSelect, onMove }) {
   `;
 }
 
-function KanbanColumn({ stage, stageKey, leads, users, onSelect, onMove }) {
+function KanbanColumn({ stage, stageKey, leads, users, onSelect, onMove, isDragOver, onDragOver, onDragLeave, onDrop, onDragStart, onDragEnd }) {
   const totalARS = leads.filter(l => l.currency === 'ARS').reduce((s, l) => s + l.value, 0);
   const totalUSD = leads.filter(l => l.currency === 'USD').reduce((s, l) => s + l.value, 0);
   const valueStr = [totalARS > 0 && formatARS(totalARS), totalUSD > 0 && formatUSD(totalUSD)].filter(Boolean).join(' + ');
@@ -88,7 +92,7 @@ function KanbanColumn({ stage, stageKey, leads, users, onSelect, onMove }) {
       <!-- Column header -->
       <div style=${{
         padding: '10px 12px', background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB',
-        marginBottom: 10, borderTop: '3px solid ' + (stage.bg && isWon ? '#CCFF44' : stage.color),
+        marginBottom: 10, borderTop: '3px solid ' + (stage.bg && isWon ? '#C6EE6A' : stage.color),
       }}>
         <div style=${{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style=${{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -100,14 +104,25 @@ function KanbanColumn({ stage, stageKey, leads, users, onSelect, onMove }) {
         ${valueStr && html`<div style=${{ fontSize: 11, color: '#9CA3AF', marginTop: 4, fontFamily: 'JetBrains Mono, monospace' }}>${valueStr}</div>`}
       </div>
 
-      <!-- Cards -->
-      <div style=${{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        ${leads.length === 0 ? html`
+      <!-- Cards drop zone -->
+      <div
+        onDragOver=${e => { e.preventDefault(); onDragOver(stageKey); }}
+        onDragLeave=${onDragLeave}
+        onDrop=${e => { e.preventDefault(); onDrop(stageKey); }}
+        style=${{
+          display: 'flex', flexDirection: 'column', gap: 8,
+          minHeight: 80, borderRadius: 8, padding: isDragOver ? 4 : 0,
+          background: isDragOver ? 'rgba(0,70,243,0.04)' : 'transparent',
+          border: isDragOver ? '2px dashed rgba(0,70,243,0.3)' : '2px dashed transparent',
+          transition: 'background 0.15s, border-color 0.15s',
+        }}
+      >
+        ${leads.length === 0 && !isDragOver ? html`
           <div style=${{ background: '#F9FAFB', borderRadius: 8, border: '1px dashed #E5E7EB', padding: '24px 16px', textAlign: 'center', color: '#D1D5DB', fontSize: 12 }}>
             Sin leads
           </div>
         ` : leads.map(l => html`
-          <${LeadCard} key=${l.id} lead=${l} users=${users} onSelect=${onSelect} onMove=${onMove} />
+          <${LeadCard} key=${l.id} lead=${l} users=${users} onSelect=${onSelect} onMove=${onMove} onDragStart=${onDragStart} onDragEnd=${onDragEnd} />
         `)}
       </div>
     </div>
@@ -147,8 +162,8 @@ function LeadDrawer({ lead, users, onClose, onMove }) {
           </div>
           <button
             onClick=${onClose}
-            style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer', fontSize: 16, color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-          >✕</button>
+            style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          ><${X} size=${16} strokeWidth=${1.5} /></button>
         </div>
       </div>
 
@@ -204,9 +219,9 @@ function LeadDrawer({ lead, users, onClose, onMove }) {
                     onClick=${() => { onMove(lead.id, s); onClose(); }}
                     style=${{
                       padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                      border: '1px solid ' + (isWon ? '#CCFF44' : isLost ? '#FFCDD2' : '#E5E7EB'),
-                      background: isWon ? '#CCFF44' : isLost ? '#FFF5F5' : '#F9FAFB',
-                      color: isWon ? '#0A0A0A' : isLost ? '#FF3B3B' : '#374151',
+                      border: '1px solid ' + (isWon ? '#C6EE6A' : isLost ? '#FFCDD2' : '#E5E7EB'),
+                      background: isWon ? '#C6EE6A' : isLost ? '#FFF5F5' : '#F9FAFB',
+                      color: isWon ? '#111827' : isLost ? '#FF6467' : '#374151',
                     }}
                   >${st.label}</button>
                 `;
@@ -236,7 +251,7 @@ function NewLeadModal({ users, onClose, onSubmit }) {
       <div style=${{ background: '#fff', borderRadius: 12, width: '100%', maxWidth: 500, boxShadow: '0 20px 60px -10px rgba(16,24,40,0.25)', overflow: 'hidden' }}>
         <div style=${{ padding: '20px 24px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style=${{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827', fontFamily: 'Space Grotesk, sans-serif' }}>Nuevo Lead</h2>
-          <button onClick=${onClose} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer', fontSize: 16, color: '#6B7280' }}>✕</button>
+          <button onClick=${onClose} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><${X} size=${16} strokeWidth=${1.5} /></button>
         </div>
         <div style=${{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style=${{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -313,11 +328,32 @@ export default function CRMPipeline() {
   const toast    = useToast();
   const [selected, setSelected]       = useState(null);
   const [showModal, setShowModal]     = useState(false);
+  const [draggingId, setDraggingId]   = useState(null);
+  const [dragOver, setDragOver]       = useState(null);
+  const dragLeaveTimer                = useRef(null);
 
   function handleMove(id, stage) {
     dispatch({ type: 'MOVE_LEAD', id, stage });
     const label = CRM_STAGES[stage]?.label || stage;
     toast('Lead movido a: ' + label);
+  }
+
+  function handleDragStart(id) { setDraggingId(id); }
+  function handleDragEnd()     { setDraggingId(null); setDragOver(null); }
+  function handleDragOver(stageKey) {
+    clearTimeout(dragLeaveTimer.current);
+    setDragOver(stageKey);
+  }
+  function handleDragLeave() {
+    dragLeaveTimer.current = setTimeout(() => setDragOver(null), 80);
+  }
+  function handleDrop(stageKey) {
+    if (draggingId) {
+      const lead = leads.find(l => l.id === draggingId);
+      if (lead && lead.stage !== stageKey) handleMove(draggingId, stageKey);
+    }
+    setDraggingId(null);
+    setDragOver(null);
   }
 
   function handleAdd(form) {
@@ -384,6 +420,12 @@ export default function CRMPipeline() {
                 users=${users}
                 onSelect=${l => setSelected(l)}
                 onMove=${handleMove}
+                isDragOver=${dragOver === stageKey && draggingId && leads.find(l => l.id === draggingId)?.stage !== stageKey}
+                onDragOver=${handleDragOver}
+                onDragLeave=${handleDragLeave}
+                onDrop=${handleDrop}
+                onDragStart=${handleDragStart}
+                onDragEnd=${handleDragEnd}
               />
             `;
           })}

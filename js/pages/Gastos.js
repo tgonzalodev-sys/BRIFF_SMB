@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
 import FilterBar from '../components/ui/FilterBar.js';
-import { useAppState } from '../context.js';
+import ViewToggle from '../components/ui/ViewToggle.js';
+import { useAppState, useCanSee } from '../context.js';
 import { formatARS, formatDate, initials } from '../lib/utils.js';
 
 const EXPENSE_STATUS = {
@@ -15,11 +16,19 @@ const EXPENSE_STATUS = {
 
 export default function Gastos() {
   const navigate = useNavigate();
-  const { expenseSheets, expenseItems, users } = useAppState();
+  const { expenseSheets, expenseItems, users, currentUser } = useAppState();
+  const canSeeAll = useCanSee();
   const [search, setSearch]   = useState('');
   const [statusF, setStatusF] = useState('');
+  const showTodosTab = canSeeAll('comercial'); // power_user + admin
+  const [viewMode, setViewMode] = useState(() => showTodosTab ? 'todos' : 'mis');
+  const effectiveMode = showTodosTab ? viewMode : 'mis';
 
-  const filteredSheets = expenseSheets.filter(sheet => {
+  const baseSheets = effectiveMode === 'mis'
+    ? expenseSheets.filter(s => s.created_by === currentUser.id)
+    : expenseSheets;
+
+  const filteredSheets = baseSheets.filter(sheet => {
     const creator = users.find(u => u.id === sheet.created_by);
     const matchSearch = !search ||
       sheet.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -28,20 +37,29 @@ export default function Gastos() {
     return matchSearch && matchStatus;
   });
 
-  const totalApproved = expenseSheets.filter(s => s.status === 'approved').reduce((s, e) => s + e.total, 0);
-  const totalPending  = expenseSheets.filter(s => s.status === 'pending').reduce((s, e) => s + e.total, 0);
-  const totalDraft    = expenseSheets.filter(s => s.status === 'draft').reduce((s, e) => s + e.total, 0);
-  const totalAll      = expenseSheets.reduce((s, e) => s + e.total, 0);
+  const totalApproved = baseSheets.filter(s => s.status === 'approved').reduce((s, e) => s + e.total, 0);
+  const totalPending  = baseSheets.filter(s => s.status === 'pending').reduce((s, e) => s + e.total, 0);
+  const totalDraft    = baseSheets.filter(s => s.status === 'draft').reduce((s, e) => s + e.total, 0);
+  const totalAll      = baseSheets.reduce((s, e) => s + e.total, 0);
 
   return html`
     <div>
       <${PageHeader}
         title="Gastos"
-        subtitle="Hojas de gastos y reembolsos del equipo"
+        subtitle=${effectiveMode === 'mis' ? 'Mis hojas de gastos' : 'Hojas de gastos y reembolsos del equipo'}
         actions=${html`
-          <button style=${{ background: '#0046F3', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif' }}>
-            + Nueva Hoja
-          </button>
+          <div style=${{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            ${showTodosTab && html`
+              <${ViewToggle}
+                tabs=${[{ key: 'mis', label: 'Mis Gastos' }, { key: 'todos', label: 'Todos' }]}
+                active=${effectiveMode}
+                onChange=${setViewMode}
+              />
+            `}
+            <button style=${{ background: '#0046F3', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif' }}>
+              + Nueva Hoja
+            </button>
+          </div>
         `}
       />
 

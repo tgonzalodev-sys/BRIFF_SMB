@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
+import ViewToggle from '../components/ui/ViewToggle.js';
 import { useAppState } from '../context.js';
 import { formatARS, formatPct, initials } from '../lib/utils.js';
 
@@ -131,7 +132,58 @@ function OverviewTab({ pnlData, pnlRows }) {
   `;
 }
 
+function ProjectRow({ p, projects, clients, last }) {
+  const project = projects.find(pr => pr.id === p.project);
+  const client  = clients.find(c => c.id === project?.client);
+  const desvioColor = p.desvio > 0 ? '#FF6467' : '#009966';
+  const marginColor = p.margen_pct >= 40 ? '#009966' : p.margen_pct >= 30 ? '#FD9A00' : '#FF6467';
+  return html`
+    <tr key=${p.project} style=${{ borderBottom: !last ? '1px solid #F3F4F6' : 'none' }}>
+      <td style=${{ padding: '12px 16px', fontWeight: 600, color: '#111827', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>${project?.title || p.project}</td>
+      <td style=${{ padding: '12px 16px', color: '#6B7280', fontSize: 12 }}>${client?.name || '—'}</td>
+      <td style=${{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#0046F3', fontFamily: 'Space Grotesk, sans-serif' }}>${formatARS(p.ingresos)}</td>
+      <td style=${{ padding: '12px 16px', textAlign: 'right', color: '#374151' }}>${formatARS(p.costo_real)}</td>
+      <td style=${{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#009966', fontFamily: 'Space Grotesk, sans-serif' }}>${formatARS(p.margen)}</td>
+      <td style=${{ padding: '12px 16px', textAlign: 'right' }}>
+        <div style=${{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+          <div style=${{ width: 48, height: 5, borderRadius: 99, background: '#E5E7EB', overflow: 'hidden' }}>
+            <div style=${{ height: '100%', width: Math.min(p.margen_pct, 100) + '%', background: marginColor, borderRadius: 99 }} />
+          </div>
+          <span style=${{ fontWeight: 700, color: marginColor, minWidth: 36 }}>${formatPct(p.margen_pct)}</span>
+        </div>
+      </td>
+      <td style=${{ padding: '12px 16px', textAlign: 'right', color: '#374151', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>${p.planned_hours}h</td>
+      <td style=${{ padding: '12px 16px', textAlign: 'right', color: '#374151', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>${p.actual_hours}h</td>
+      <td style=${{ padding: '12px 16px', textAlign: 'right' }}>
+        <span style=${{ fontWeight: 600, color: desvioColor, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
+          ${p.desvio > 0 ? '+' : ''}${p.desvio}h
+        </span>
+      </td>
+    </tr>
+  `;
+}
+
 function RentabilidadTab({ profitability, projects, clients }) {
+  const [rentView, setRentView] = useState('proyecto');
+  const [expandedClient, setExpandedClient] = useState(null);
+
+  // Build per-client aggregation for "Por Cliente" view
+  const clientGroups = clients.map(client => {
+    const clientProjects = profitability.filter(p => {
+      const proj = projects.find(pr => pr.id === p.project);
+      return proj?.client === client.id;
+    });
+    if (!clientProjects.length) return null;
+    const totalIngresos  = clientProjects.reduce((s, p) => s + p.ingresos, 0);
+    const totalCosto     = clientProjects.reduce((s, p) => s + p.costo_real, 0);
+    const totalMargen    = clientProjects.reduce((s, p) => s + p.margen, 0);
+    const avgMargenPct   = totalIngresos > 0 ? (totalMargen / totalIngresos) * 100 : 0;
+    const totalPlanned   = clientProjects.reduce((s, p) => s + p.planned_hours, 0);
+    const totalActual    = clientProjects.reduce((s, p) => s + p.actual_hours, 0);
+    const totalDesvio    = totalActual - totalPlanned;
+    return { client, projects: clientProjects, totalIngresos, totalCosto, totalMargen, avgMargenPct, totalPlanned, totalActual, totalDesvio };
+  }).filter(Boolean);
+
   return html`
     <div style=${{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <!-- Summary KPIs -->
@@ -147,10 +199,15 @@ function RentabilidadTab({ profitability, projects, clients }) {
         />
       </div>
 
-      <!-- Project profitability table -->
+      <!-- View toggle + table -->
       <div style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
-        <div style=${{ padding: '14px 20px', borderBottom: '1px solid #E5E7EB' }}>
-          <h3 style=${{ margin: 0, fontSize: 13, fontWeight: 600, color: '#111827' }}>Rentabilidad por Proyecto</h3>
+        <div style=${{ padding: '14px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3 style=${{ margin: 0, fontSize: 13, fontWeight: 600, color: '#111827' }}>Rentabilidad</h3>
+          <${ViewToggle}
+            tabs=${[{ key: 'proyecto', label: 'Por Proyecto' }, { key: 'cliente', label: 'Por Cliente' }]}
+            active=${rentView}
+            onChange=${setRentView}
+          />
         </div>
         <table style=${{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
@@ -161,36 +218,69 @@ function RentabilidadTab({ profitability, projects, clients }) {
             </tr>
           </thead>
           <tbody>
-            ${profitability.map((p, i) => {
-              const project = projects.find(pr => pr.id === p.project);
-              const client  = clients.find(c => c.id === project?.client);
-              const desvioColor = p.desvio > 0 ? '#FF6467' : '#009966';
-              const marginColor = p.margen_pct >= 40 ? '#009966' : p.margen_pct >= 30 ? '#FD9A00' : '#FF6467';
-              return html`
-                <tr key=${p.project} style=${{ borderBottom: i < profitability.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
-                  <td style=${{ padding: '12px 16px', fontWeight: 600, color: '#111827', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>${project?.title || p.project}</td>
-                  <td style=${{ padding: '12px 16px', color: '#6B7280', fontSize: 12 }}>${client?.name || '—'}</td>
-                  <td style=${{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#0046F3', fontFamily: 'Space Grotesk, sans-serif' }}>${formatARS(p.ingresos)}</td>
-                  <td style=${{ padding: '12px 16px', textAlign: 'right', color: '#374151' }}>${formatARS(p.costo_real)}</td>
-                  <td style=${{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#009966', fontFamily: 'Space Grotesk, sans-serif' }}>${formatARS(p.margen)}</td>
-                  <td style=${{ padding: '12px 16px', textAlign: 'right' }}>
-                    <div style=${{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-                      <div style=${{ width: 48, height: 5, borderRadius: 99, background: '#E5E7EB', overflow: 'hidden' }}>
-                        <div style=${{ height: '100%', width: Math.min(p.margen_pct, 100) + '%', background: marginColor, borderRadius: 99 }} />
-                      </div>
-                      <span style=${{ fontWeight: 700, color: marginColor, minWidth: 36 }}>${formatPct(p.margen_pct)}</span>
-                    </div>
-                  </td>
-                  <td style=${{ padding: '12px 16px', textAlign: 'right', color: '#374151', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>${p.planned_hours}h</td>
-                  <td style=${{ padding: '12px 16px', textAlign: 'right', color: '#374151', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>${p.actual_hours}h</td>
-                  <td style=${{ padding: '12px 16px', textAlign: 'right' }}>
-                    <span style=${{ fontWeight: 600, color: desvioColor, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
-                      ${p.desvio > 0 ? '+' : ''}${p.desvio}h
-                    </span>
-                  </td>
-                </tr>
-              `;
-            })}
+            ${rentView === 'proyecto'
+              ? profitability.map((p, i) => html`<${ProjectRow} key=${p.project} p=${p} projects=${projects} clients=${clients} last=${i === profitability.length - 1} />`)
+              : clientGroups.flatMap(cg => {
+                  const isExpanded = expandedClient === cg.client.id;
+                  const desvioColor = cg.totalDesvio > 0 ? '#FF6467' : '#009966';
+                  const marginColor = cg.avgMargenPct >= 40 ? '#009966' : cg.avgMargenPct >= 30 ? '#FD9A00' : '#FF6467';
+                  const headerRow = html`
+                    <tr key=${'cg-' + cg.client.id}
+                      onClick=${() => setExpandedClient(isExpanded ? null : cg.client.id)}
+                      style=${{ borderBottom: '1px solid #E5E7EB', background: '#F9FAFB', cursor: 'pointer' }}
+                      onMouseEnter=${e => e.currentTarget.style.background = '#F3F4F6'}
+                      onMouseLeave=${e => e.currentTarget.style.background = '#F9FAFB'}
+                    >
+                      <td style=${{ padding: '12px 16px', fontWeight: 700, color: '#111827' }}>
+                        <span style=${{ marginRight: 8, fontSize: 11, color: '#9CA3AF' }}>${isExpanded ? '▾' : '▸'}</span>
+                        ${cg.client.name}
+                        <span style=${{ fontSize: 11, fontWeight: 500, color: '#9CA3AF', marginLeft: 6 }}>${cg.projects.length} proyecto${cg.projects.length !== 1 ? 's' : ''}</span>
+                      </td>
+                      <td style=${{ padding: '12px 16px', color: '#9CA3AF', fontSize: 12 }}>—</td>
+                      <td style=${{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#0046F3', fontFamily: 'Space Grotesk, sans-serif' }}>${formatARS(cg.totalIngresos)}</td>
+                      <td style=${{ padding: '12px 16px', textAlign: 'right', color: '#374151' }}>${formatARS(cg.totalCosto)}</td>
+                      <td style=${{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#009966', fontFamily: 'Space Grotesk, sans-serif' }}>${formatARS(cg.totalMargen)}</td>
+                      <td style=${{ padding: '12px 16px', textAlign: 'right' }}>
+                        <div style=${{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                          <div style=${{ width: 48, height: 5, borderRadius: 99, background: '#E5E7EB', overflow: 'hidden' }}>
+                            <div style=${{ height: '100%', width: Math.min(cg.avgMargenPct, 100) + '%', background: marginColor, borderRadius: 99 }} />
+                          </div>
+                          <span style=${{ fontWeight: 700, color: marginColor, minWidth: 36 }}>${formatPct(cg.avgMargenPct)}</span>
+                        </div>
+                      </td>
+                      <td style=${{ padding: '12px 16px', textAlign: 'right', color: '#374151', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>${cg.totalPlanned}h</td>
+                      <td style=${{ padding: '12px 16px', textAlign: 'right', color: '#374151', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>${cg.totalActual}h</td>
+                      <td style=${{ padding: '12px 16px', textAlign: 'right' }}>
+                        <span style=${{ fontWeight: 600, color: desvioColor, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
+                          ${cg.totalDesvio > 0 ? '+' : ''}${cg.totalDesvio}h
+                        </span>
+                      </td>
+                    </tr>
+                  `;
+                  const subRows = isExpanded ? cg.projects.map(p => html`
+                    <tr key=${'sub-' + p.project} style=${{ borderBottom: '1px solid #F3F4F6', background: '#FAFBFF' }}>
+                      <td style=${{ padding: '10px 16px 10px 40px', color: '#374151', fontSize: 12 }}>
+                        ${projects.find(pr => pr.id === p.project)?.title || p.project}
+                      </td>
+                      <td style=${{ padding: '10px 16px', color: '#9CA3AF', fontSize: 12 }}></td>
+                      <td style=${{ padding: '10px 16px', textAlign: 'right', color: '#0046F3', fontFamily: 'Space Grotesk, sans-serif', fontSize: 12 }}>${formatARS(p.ingresos)}</td>
+                      <td style=${{ padding: '10px 16px', textAlign: 'right', color: '#6B7280', fontSize: 12 }}>${formatARS(p.costo_real)}</td>
+                      <td style=${{ padding: '10px 16px', textAlign: 'right', color: '#009966', fontFamily: 'Space Grotesk, sans-serif', fontSize: 12 }}>${formatARS(p.margen)}</td>
+                      <td style=${{ padding: '10px 16px', textAlign: 'right' }}>
+                        <span style=${{ fontSize: 12, fontWeight: 600, color: p.margen_pct >= 40 ? '#009966' : p.margen_pct >= 30 ? '#FD9A00' : '#FF6467' }}>${formatPct(p.margen_pct)}</span>
+                      </td>
+                      <td style=${{ padding: '10px 16px', textAlign: 'right', color: '#6B7280', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>${p.planned_hours}h</td>
+                      <td style=${{ padding: '10px 16px', textAlign: 'right', color: '#6B7280', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>${p.actual_hours}h</td>
+                      <td style=${{ padding: '10px 16px', textAlign: 'right' }}>
+                        <span style=${{ fontWeight: 600, color: p.desvio > 0 ? '#FF6467' : '#009966', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
+                          ${p.desvio > 0 ? '+' : ''}${p.desvio}h
+                        </span>
+                      </td>
+                    </tr>
+                  `) : [];
+                  return [headerRow, ...subRows];
+                })
+            }
           </tbody>
         </table>
       </div>

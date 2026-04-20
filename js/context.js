@@ -10,11 +10,12 @@ import {
   ORGANIZATION
 } from './mock-data.js';
 
-const STORAGE_KEY = 'briff_state_v5';
+const STORAGE_KEY = 'briff_state_v6';
 
 const initialState = {
   currentUser: USERS[0],
   viewAs: 'Director',
+  viewAsTier: 'admin',
   notifications: NOTIFICATIONS,
   users: USERS,
   clients: CLIENTS,
@@ -52,7 +53,7 @@ function reducer(state, action) {
   switch (action.type) {
     case 'SET_USER': {
       const user = state.users.find(u => u.id === action.userId);
-      return { ...state, currentUser: user, viewAs: user.role };
+      return { ...state, currentUser: user, viewAs: user.role, viewAsTier: user.tier };
     }
     case 'ADD_PROJECT':
       return { ...state, projects: [...state.projects, action.project] };
@@ -144,6 +145,20 @@ export function AppProvider({ children }) {
 
 export function useAppState() { return useContext(AppStateContext); }
 export function useDispatch()  { return useContext(AppDispatchContext); }
+
+// Returns true if the current viewAsTier can access the given section.
+// sections: 'comercial' | 'finanzas' | 'equipo' | 'config'
+export function canSee(viewAsTier, section) {
+  if (viewAsTier === 'admin') return true;
+  if (section === 'config') return false;
+  if (viewAsTier === 'power_user') return true;
+  return false; // team_member only sees operaciones
+}
+
+export function useCanSee() {
+  const { viewAsTier } = useAppState();
+  return (section) => canSee(viewAsTier, section);
+}
 
 export function useToast() {
   const dispatch = useDispatch();

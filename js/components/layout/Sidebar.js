@@ -6,6 +6,7 @@ import { initials } from '../../lib/utils.js';
 // minTier: which tiers can see this group. OPERACIONES has no restriction.
 const NAV = [
   { group: 'OPERACIONES', section: null, items: [
+    { path: '/dashboard',   label: 'Inicio'        },
     { path: '/proyectos',   label: 'Proyectos'     },
     { path: '/timesheets',  label: 'Timesheets',  badge: 2 },
     { path: '/licencias',   label: 'Licencias'    },

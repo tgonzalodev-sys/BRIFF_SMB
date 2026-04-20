@@ -5,17 +5,18 @@ import StatusBadge from '../components/ui/StatusBadge.js';
 import BurnBar from '../components/ui/BurnBar.js';
 import { useAppState, useDispatch, useToast } from '../context.js';
 import { formatARS, formatDate, initials } from '../lib/utils.js';
+import { ArrowLeft, Folder, Check, Inbox } from 'lucide-react';
 
 const TYPE_INFO = {
-  campaña:  { label: 'Campaña',  color: '#7C3AED', bg: '#F5F3FF' },
-  digital:  { label: 'Digital',  color: '#0891B2', bg: '#ECFEFF' },
-  branding: { label: 'Branding', color: '#D97706', bg: '#FFFBEB' },
-  retainer: { label: 'Retainer', color: '#059669', bg: '#F0FDF4' },
+  campaña:  { label: 'Campaña',  color: '#8E51FF', bg: '#F5F3FF' },
+  digital:  { label: 'Digital',  color: '#00B8DB', bg: '#E0F9FF' },
+  branding: { label: 'Branding', color: '#FE9A00', bg: '#FEF3C6' },
+  retainer: { label: 'Retainer', color: '#00BC7D', bg: '#D0FAE5' },
 };
 
 const JOB_STATUS_INFO = {
-  done:        { label: 'Completado',  color: '#009966', bg: '#F0FDF4' },
-  in_progress: { label: 'En Progreso', color: '#0046F3', bg: '#EEF4FF' },
+  done:        { label: 'Completado',  color: '#009966', bg: '#D0FAE5' },
+  in_progress: { label: 'En Progreso', color: '#0046F3', bg: '#E0E6F6' },
   pending:     { label: 'Pendiente',   color: '#6B7280', bg: '#F3F4F6' },
 };
 
@@ -36,7 +37,7 @@ export default function ProyectoDetalle() {
   const project = projects.find(p => p.id === id);
   if (!project) return html`
     <div style=${{ padding: 48, textAlign: 'center', color: '#9CA3AF' }}>
-      <div style=${{ fontSize: 28, marginBottom: 8 }}>◻</div>
+      <div style=${{ marginBottom: 8, color: '#D1D5DB' }}><${Folder} size=${44} strokeWidth=${1.33} /></div>
       <div>Proyecto no encontrado.</div>
       <button onClick=${() => navigate('/proyectos')} style=${{ marginTop: 16, background: '#0046F3', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Volver</button>
     </div>
@@ -62,7 +63,7 @@ export default function ProyectoDetalle() {
     <div>
       <!-- Back + header -->
       <div style=${{ marginBottom: 20 }}>
-        <button onClick=${() => navigate('/proyectos')} style=${{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: 13, padding: 0, marginBottom: 12, fontFamily: 'inherit' }}>← Volver a Proyectos</button>
+        <button onClick=${() => navigate('/proyectos')} style=${{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: 13, padding: 0, marginBottom: 12, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}><${ArrowLeft} size=${14} strokeWidth=${1.33} /> Volver a Proyectos</button>
         <div style=${{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
           <div>
             <div style=${{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
@@ -109,7 +110,11 @@ export default function ProyectoDetalle() {
             </div>
 
             ${projectJobs.length === 0 ? html`
-              <div style=${{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>Sin jobs registrados.</div>
+              <div style=${{ padding: '40px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <${Inbox} size=${32} strokeWidth=${1.33} color="#D1D5DB" />
+                <div style=${{ fontSize: 14, fontWeight: 600, color: '#374151', marginTop: 4 }}>Sin jobs</div>
+                <div style=${{ fontSize: 12, color: '#9CA3AF' }}>Este proyecto aún no tiene jobs registrados.</div>
+              </div>
             ` : projectJobs.map((job, ji) => {
               const jobTasks  = tasks.filter(t => t.job === job.id);
               const doneCount = jobTasks.filter(t => t.status === 'done').length;
@@ -154,7 +159,7 @@ export default function ProyectoDetalle() {
                               onClick=${e => { e.stopPropagation(); toggleTask(task.id); }}
                               style=${{ width: 16, height: 16, borderRadius: 4, border: '2px solid ' + tInfo.color, background: task.status === 'done' ? tInfo.color : 'transparent', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                             >
-                              ${task.status === 'done' && html`<span style=${{ color: '#fff', fontSize: 10, lineHeight: 1 }}>✓</span>`}
+                              ${task.status === 'done' && html`<${Check} size=${10} strokeWidth=${3} color="#fff" />`}
                             </div>
                             <!-- Task title -->
                             <div style=${{ flex: 1, fontSize: 12, color: task.status === 'done' ? '#9CA3AF' : '#374151', textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>${task.title}</div>

@@ -2,28 +2,33 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
+import FilterBar from '../components/ui/FilterBar.js';
 import { useAppState } from '../context.js';
-import { formatDate } from '../lib/utils.js';
+import { formatDate, formatARS } from '../lib/utils.js';
 
 const CAT_COLORS = {
-  'Fotografía':    { color: '#7C3AED', bg: '#F5F3FF' },
-  'Audio & Música':{ color: '#0891B2', bg: '#ECFEFF' },
-  'Impresión':     { color: '#D97706', bg: '#FFFBEB' },
-  'Video & Cine':  { color: '#DC2626', bg: '#FEF2F2' },
+  'Fotografía':    { color: '#8E51FF', bg: '#F5F3FF' },
+  'Audio & Música':{ color: '#00B8DB', bg: '#E0F9FF' },
+  'Impresión':     { color: '#FE9A00', bg: '#FEF3C6' },
+  'Video & Cine':  { color: '#FF2056', bg: '#FEF2F2' },
 };
 
 export default function Proveedores() {
   const navigate  = useNavigate();
   const { suppliers, purchaseOrders, projects } = useAppState();
   const [search, setSearch] = useState('');
-
-  const filtered = suppliers.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.category.toLowerCase().includes(search.toLowerCase()) ||
-    s.contact.toLowerCase().includes(search.toLowerCase())
-  );
+  const [catF, setCatF]     = useState('');
 
   const categories = [...new Set(suppliers.map(s => s.category))];
+
+  const filtered = suppliers.filter(s => {
+    const matchSearch = !search ||
+      s.name.toLowerCase().includes(search.toLowerCase()) ||
+      s.category.toLowerCase().includes(search.toLowerCase()) ||
+      s.contact.toLowerCase().includes(search.toLowerCase());
+    const matchCat = !catF || s.category === catF;
+    return matchSearch && matchCat;
+  });
 
   return html`
     <div>
@@ -58,16 +63,14 @@ export default function Proveedores() {
         `)}
       </div>
 
-      <!-- Search -->
-      <div style=${{ marginBottom: 16 }}>
-        <input
-          type="text"
-          placeholder="Buscar por nombre, categoría o contacto..."
-          value=${search}
-          onChange=${e => setSearch(e.target.value)}
-          style=${{ width: '100%', boxSizing: 'border-box', padding: '9px 14px', border: '1px solid #E5E7EB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: '#fff' }}
-        />
-      </div>
+      <${FilterBar}
+        search=${search} onSearch=${setSearch}
+        placeholder="Buscar por nombre, categoría o contacto…"
+        filters=${[
+          { label: 'Categoría', value: catF, onChange: setCatF, options: categories.map(c => ({ value: c, label: c })) },
+        ]}
+        count=${filtered.length}
+      />
 
       <!-- Suppliers table -->
       <div style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
@@ -96,7 +99,7 @@ export default function Proveedores() {
                   <td style=${{ padding: '14px 16px', color: '#374151', fontSize: 12, fontFamily: 'JetBrains Mono, monospace' }}>${s.phone}</td>
                   <td style=${{ padding: '14px 16px' }}>
                     ${activePOs.length > 0
-                      ? html`<span style=${{ fontSize: 12, fontWeight: 600, color: '#0046F3', background: '#EEF4FF', padding: '2px 10px', borderRadius: 99 }}>${activePOs.length} OC${activePOs.length > 1 ? 's' : ''}</span>`
+                      ? html`<span style=${{ fontSize: 12, fontWeight: 600, color: '#0046F3', background: '#E0E6F6', padding: '2px 10px', borderRadius: 99 }}>${activePOs.length} OC${activePOs.length > 1 ? 's' : ''}</span>`
                       : html`<span style=${{ fontSize: 12, color: '#9CA3AF' }}>—</span>`
                     }
                   </td>
@@ -128,9 +131,9 @@ export default function Proveedores() {
               const sup  = suppliers.find(s => s.id === po.supplier);
               const proj = projects.find(p => p.id === po.project);
               const statusInfo = {
-                pending: { label: 'Pendiente', color: '#D97706', bg: '#FFFBEB' },
-                issued:  { label: 'Emitida',   color: '#0046F3', bg: '#EEF4FF' },
-                paid:    { label: 'Pagada',     color: '#009966', bg: '#F0FDF4' },
+                pending: { label: 'Pendiente', color: '#FE9A00', bg: '#FEF3C6' },
+                issued:  { label: 'Emitida',   color: '#0046F3', bg: '#E0E6F6' },
+                paid:    { label: 'Pagada',     color: '#009966', bg: '#D0FAE5' },
               }[po.status] || {};
               return html`
                 <tr key=${po.id} style=${{ borderBottom: i < purchaseOrders.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
@@ -139,7 +142,7 @@ export default function Proveedores() {
                   <td style=${{ padding: '11px 16px', color: '#6B7280', fontSize: 12 }}>${proj?.title?.slice(0, 20) || '—'}${proj?.title?.length > 20 ? '…' : ''}</td>
                   <td style=${{ padding: '11px 16px', color: '#6B7280', fontSize: 12 }}>${po.description}</td>
                   <td style=${{ padding: '11px 16px', color: '#6B7280', fontSize: 12, whiteSpace: 'nowrap' }}>${formatDate(po.date)}</td>
-                  <td style=${{ padding: '11px 16px', fontWeight: 700, color: '#111827', fontFamily: 'Space Grotesk, sans-serif' }}>$ ${po.amount.toLocaleString('es-AR')}</td>
+                  <td style=${{ padding: '11px 16px', fontWeight: 700, color: '#111827', fontFamily: 'Space Grotesk, sans-serif' }}>${formatARS(po.amount)}</td>
                   <td style=${{ padding: '11px 16px' }}>
                     <span style=${{ fontSize: 12, fontWeight: 600, color: statusInfo.color, background: statusInfo.bg, padding: '2px 8px', borderRadius: 99 }}>${statusInfo.label}</span>
                   </td>

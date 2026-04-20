@@ -15,7 +15,7 @@ export default function AvatarGroup({ users, max = 4, size = 'sm' }) {
         </div>
       `)}
       ${extra > 0 && html`
-        <div style=${{ marginLeft: -8, zIndex: 0, width: px, height: px, borderRadius: '50%', background: '#E2E2EC', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: '#6B6B80' }}>
+        <div style=${{ marginLeft: -8, zIndex: 0, width: px, height: px, borderRadius: '50%', background: '#E5E7EB', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: '#6B7280' }}>
           +${extra}
         </div>
       `}

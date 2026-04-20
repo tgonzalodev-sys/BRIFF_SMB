@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { html } from '../lib/html.js';
 import { useAppState, useDispatch, useToast } from '../context.js';
 import PageHeader from '../components/ui/PageHeader.js';
+import { ChevronLeft, ChevronRight, Hourglass, SquareKanban } from 'lucide-react';
+import { TODAY } from '../lib/utils.js';
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
 
@@ -25,15 +27,15 @@ function weekKey(offset) {
 }
 
 const STATUS_MAP = {
-  draft:    { label: 'Borrador',    bg: '#F5F5FA', color: '#6B6B80', border: '#E2E2EC' },
-  pending:  { label: 'En revisión', bg: '#FFF7ED', color: '#D97706', border: '#FDE68A' },
-  approved: { label: 'Aprobado ✓', bg: '#F0FDF4', color: '#059669', border: '#BBF7D0' },
+  draft:    { label: 'Borrador',    bg: '#F9FAFB', color: '#6B7280', border: '#E5E7EB' },
+  pending:  { label: 'En revisión', bg: '#FEF3C6', color: '#FF8041', border: '#FDE68A' },
+  approved: { label: 'Aprobado',    bg: '#D0FAE5', color: '#009966', border: '#6EE7B7' },
 };
 
 const inputBase = {
-  width: 52, height: 34, border: '1px solid #E2E2EC', borderRadius: 6,
-  textAlign: 'center', fontSize: 13, fontFamily: 'DM Mono, monospace',
-  outline: 'none', color: '#0A0A0A', display: 'block', margin: '0 auto',
+  width: 52, height: 34, border: '1px solid #E5E7EB', borderRadius: 8,
+  textAlign: 'center', fontSize: 13, fontFamily: 'JetBrains Mono, monospace',
+  outline: 'none', color: '#111827', display: 'block', margin: '0 auto',
 };
 
 export default function Timesheets() {
@@ -80,6 +82,25 @@ export default function Timesheets() {
     toast('Timesheet enviado para aprobación');
   }
 
+  // Copy previous week's entries
+  function handleCopyPrevWeek() {
+    const prevDates = weekDates(weekOffset - 1);
+    let copied = 0;
+    myProjects.forEach(project => {
+      myJobs.filter(j => j.project === project.id).forEach(job => {
+        prevDates.forEach((prevDate, i) => {
+          const prevHours = getHours(project.id, job.id, prevDate);
+          if (prevHours !== '' && parseFloat(prevHours) > 0) {
+            dispatch({ type: 'UPSERT_TIMESHEET_ENTRY', entry: { user: currentUser.id, project: project.id, job: job.id, date: dates[i], hours: parseFloat(prevHours) } });
+            copied++;
+          }
+        });
+      });
+    });
+    if (copied > 0) toast(`${copied} entradas copiadas de la semana anterior`);
+    else toast('La semana anterior no tiene horas registradas');
+  }
+
   const st = STATUS_MAP[status] || STATUS_MAP.draft;
   const pendingCount = timesheetWeeks.filter(w => w.status === 'pending').length;
   const isApprover = currentUser.role === 'Director' || currentUser.role === 'Finance';
@@ -92,35 +113,48 @@ export default function Timesheets() {
         actions=${html`
           ${isApprover && pendingCount > 0 && html`
             <button onClick=${() => navigate('/timesheets/pendientes')}
-              style=${{ background: '#FFF7ED', border: '1px solid #FDE68A', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#D97706', fontFamily: 'DM Sans, sans-serif', display: 'flex', alignItems: 'center', gap: 6 }}>
-              ⏳ ${pendingCount} pendiente${pendingCount > 1 ? 's' : ''} de aprobación
+              style=${{ background: '#FEF3C6', border: '1px solid #FDE68A', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#FF8041', fontFamily: 'Host Grotesk, sans-serif', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+              <${Hourglass} size=${14} strokeWidth=${1.33} />
+              ${pendingCount} pendiente${pendingCount > 1 ? 's' : ''} de aprobación
             </button>
           `}
         `}
       />
 
       <!-- Week Navigator -->
-      <div style=${{ background: '#fff', borderRadius: 10, border: '1px solid #E2E2EC', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style=${{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style=${{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick=${() => setWeekOffset(weekOffset - 1)}
-            style=${{ width: 32, height: 32, borderRadius: 7, border: '1px solid #E2E2EC', background: '#fff', cursor: 'pointer', fontSize: 18, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onMouseEnter=${e => e.currentTarget.style.background = '#F5F5FA'}
-            onMouseLeave=${e => e.currentTarget.style.background = '#fff'}>‹</button>
-          <span style=${{ fontSize: 14, fontWeight: 600, color: '#0A0A0A', minWidth: 280, textAlign: 'center', fontFamily: 'DM Mono, monospace' }}>${weekLabel(weekOffset)}</span>
+            style=${{ width: 32, height: 32, borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onMouseEnter=${e => e.currentTarget.style.background = '#F9FAFB'}
+            onMouseLeave=${e => e.currentTarget.style.background = '#fff'}>
+            <${ChevronLeft} size=${16} strokeWidth=${1.33} />
+          </button>
+          <span style=${{ fontSize: 14, fontWeight: 600, color: '#111827', minWidth: 280, textAlign: 'center', fontFamily: 'JetBrains Mono, monospace' }}>${weekLabel(weekOffset)}</span>
           <button onClick=${() => setWeekOffset(weekOffset + 1)}
-            style=${{ width: 32, height: 32, borderRadius: 7, border: '1px solid #E2E2EC', background: '#fff', cursor: 'pointer', fontSize: 18, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onMouseEnter=${e => e.currentTarget.style.background = '#F5F5FA'}
-            onMouseLeave=${e => e.currentTarget.style.background = '#fff'}>›</button>
+            style=${{ width: 32, height: 32, borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onMouseEnter=${e => e.currentTarget.style.background = '#F9FAFB'}
+            onMouseLeave=${e => e.currentTarget.style.background = '#fff'}>
+            <${ChevronRight} size=${16} strokeWidth=${1.33} />
+          </button>
         </div>
         <div style=${{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style=${{ fontSize: 12, background: st.bg, color: st.color, border: `1px solid ${st.border}`, borderRadius: 20, padding: '4px 14px', fontWeight: 600 }}>
+          ${isEditable && html`
+            <button onClick=${handleCopyPrevWeek}
+              style=${{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '7px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 500, color: '#6B7280', fontFamily: 'Host Grotesk, sans-serif' }}
+              onMouseEnter=${e => { e.currentTarget.style.background = '#F3F4F6'; e.currentTarget.style.color = '#111827'; }}
+              onMouseLeave=${e => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.color = '#6B7280'; }}>
+              Copiar semana anterior
+            </button>
+          `}
+          <span style=${{ fontSize: 12, background: st.bg, color: st.color, border: `1px solid ${st.border}`, borderRadius: 9999, padding: '4px 14px', fontWeight: 600 }}>
             ${st.label}
           </span>
           ${isEditable && weekTotal > 0 && html`
             <button onClick=${handleSubmit}
-              style=${{ background: '#2A2AFF', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'DM Sans, sans-serif' }}
-              onMouseEnter=${e => e.currentTarget.style.background = '#1a1aee'}
-              onMouseLeave=${e => e.currentTarget.style.background = '#2A2AFF'}>
+              style=${{ background: '#0046F3', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'Host Grotesk, sans-serif', whiteSpace: 'nowrap' }}
+              onMouseEnter=${e => e.currentTarget.style.background = '#011BB8'}
+              onMouseLeave=${e => e.currentTarget.style.background = '#0046F3'}>
               Enviar para aprobación
             </button>
           `}
@@ -128,21 +162,21 @@ export default function Timesheets() {
       </div>
 
       <!-- Grid -->
-      <div style=${{ background: '#fff', borderRadius: 10, border: '1px solid #E2E2EC', overflow: 'auto' }}>
+      <div style=${{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', overflow: 'auto' }}>
         <table style=${{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style=${{ background: '#F5F5FA', borderBottom: '2px solid #E2E2EC' }}>
-              <th style=${{ padding: '10px 20px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#6B6B80', textTransform: 'uppercase', letterSpacing: '0.06em', minWidth: 220 }}>Proyecto / Job</th>
+            <tr style=${{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
+              <th style=${{ padding: '10px 20px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', minWidth: 220 }}>Proyecto / Job</th>
               ${dates.map((date, i) => {
-                const isToday = date === '2026-04-17';
+                const isToday = date === TODAY;
                 return html`
-                  <th key=${date} style=${{ padding: '10px 8px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: isToday ? '#2A2AFF' : '#6B6B80', textTransform: 'uppercase', letterSpacing: '0.06em', width: 80, background: isToday ? '#F0F0FF' : 'transparent' }}>
+                  <th key=${date} style=${{ padding: '10px 8px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: isToday ? '#0046F3' : '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', width: 80, background: isToday ? '#E0E6F6' : 'transparent' }}>
                     ${DAY_LABELS[i]}<br/>
-                    <span style=${{ fontFamily: 'DM Mono, monospace', fontWeight: 400 }}>${date.slice(8)}</span>
+                    <span style=${{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 400 }}>${date.slice(8)}</span>
                   </th>
                 `;
               })}
-              <th style=${{ padding: '10px 8px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#6B6B80', textTransform: 'uppercase', letterSpacing: '0.06em', width: 72 }}>Total</th>
+              <th style=${{ padding: '10px 8px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', width: 72 }}>Total</th>
             </tr>
           </thead>
           <tbody>
@@ -150,35 +184,35 @@ export default function Timesheets() {
               const pJobs = myJobs.filter(j => j.project === project.id);
               if (!pJobs.length) return null;
               return html`
-                <tr key=${'ph-' + project.id} style=${{ background: '#FAFAFA', borderTop: '2px solid #E2E2EC' }}>
-                  <td colspan=${7} style=${{ padding: '7px 20px', fontSize: 12, fontWeight: 700, color: '#2A2AFF' }}>${project.title}</td>
+                <tr key=${'ph-' + project.id} style=${{ background: '#F9FAFB', borderTop: '2px solid #E5E7EB' }}>
+                  <td colspan=${7} style=${{ padding: '7px 20px', fontSize: 12, fontWeight: 700, color: '#0046F3' }}>${project.title}</td>
                 </tr>
                 ${pJobs.map(job => {
                   const rt = rowTotal(project.id, job.id);
                   return html`
-                    <tr key=${job.id} style=${{ borderBottom: '1px solid #F0F0F5', transition: 'background 0.1s' }}
-                      onMouseEnter=${e => e.currentTarget.style.background = '#FAFAFE'}
+                    <tr key=${job.id} style=${{ borderBottom: '1px solid #F3F4F6', transition: 'background 0.1s' }}
+                      onMouseEnter=${e => e.currentTarget.style.background = '#F9FAFB'}
                       onMouseLeave=${e => e.currentTarget.style.background = 'transparent'}>
-                      <td style=${{ padding: '7px 20px 7px 32px', fontSize: 13, color: '#4B4B60' }}>${job.title}</td>
+                      <td style=${{ padding: '7px 20px 7px 32px', fontSize: 13, color: '#4B5563' }}>${job.title}</td>
                       ${dates.map(date => {
                         const val = getHours(project.id, job.id, date);
-                        const isToday = date === '2026-04-17';
+                        const isToday = date === TODAY;
                         return html`
-                          <td key=${date} style=${{ padding: '5px 8px', textAlign: 'center', background: isToday ? '#F8F8FF' : 'transparent' }}>
+                          <td key=${date} style=${{ padding: '5px 8px', textAlign: 'center', background: isToday ? '#E0E6F6' : 'transparent' }}>
                             <input
                               type="number" min="0" max="24" step="0.5"
                               value=${val}
                               disabled=${!isEditable}
                               placeholder="—"
                               onChange=${e => handleChange(project.id, job.id, date, e.target.value)}
-                              style=${{ ...inputBase, background: isEditable ? '#fff' : '#FAFAFA', cursor: isEditable ? 'text' : 'default' }}
-                              onFocus=${e => { e.currentTarget.style.borderColor = '#2A2AFF'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(42,42,255,0.1)'; }}
-                              onBlur=${e => { e.currentTarget.style.borderColor = '#E2E2EC'; e.currentTarget.style.boxShadow = 'none'; }}
+                              style=${{ ...inputBase, background: isEditable ? '#fff' : '#F9FAFB', cursor: isEditable ? 'text' : 'default' }}
+                              onFocus=${e => { e.currentTarget.style.borderColor = '#0046F3'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0,70,243,0.15)'; }}
+                              onBlur=${e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.boxShadow = 'none'; }}
                             />
                           </td>
                         `;
                       })}
-                      <td style=${{ padding: '7px 8px', textAlign: 'center', fontSize: 13, fontFamily: 'DM Mono, monospace', fontWeight: 600, color: rt > 0 ? '#0A0A0A' : '#C0C0CC' }}>
+                      <td style=${{ padding: '7px 8px', textAlign: 'center', fontSize: 13, fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: rt > 0 ? '#111827' : '#D1D5DB' }}>
                         ${rt > 0 ? rt + 'h' : '—'}
                       </td>
                     </tr>
@@ -188,17 +222,17 @@ export default function Timesheets() {
             })}
 
             <!-- Daily totals row -->
-            <tr style=${{ background: '#F5F5FA', borderTop: '2px solid #E2E2EC' }}>
-              <td style=${{ padding: '10px 20px', fontSize: 12, fontWeight: 700, color: '#0A0A0A' }}>Total diario</td>
+            <tr style=${{ background: '#F9FAFB', borderTop: '2px solid #E5E7EB' }}>
+              <td style=${{ padding: '10px 20px', fontSize: 12, fontWeight: 700, color: '#111827' }}>Total diario</td>
               ${dates.map(date => {
                 const dt = dayTotal(date);
                 return html`
-                  <td key=${date} style=${{ padding: '10px 8px', textAlign: 'center', fontSize: 13, fontFamily: 'DM Mono, monospace', fontWeight: 700, color: dt > 8 ? '#FF6B2B' : dt > 0 ? '#0A0A0A' : '#C0C0CC' }}>
+                  <td key=${date} style=${{ padding: '10px 8px', textAlign: 'center', fontSize: 13, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: dt > 8 ? '#FF8041' : dt > 0 ? '#111827' : '#D1D5DB' }}>
                     ${dt > 0 ? dt + 'h' : '—'}
                   </td>
                 `;
               })}
-              <td style=${{ padding: '10px 8px', textAlign: 'center', fontSize: 15, fontFamily: 'DM Mono, monospace', fontWeight: 700, color: weekTotal > 0 ? '#2A2AFF' : '#C0C0CC' }}>
+              <td style=${{ padding: '10px 8px', textAlign: 'center', fontSize: 15, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: weekTotal > 0 ? '#0046F3' : '#D1D5DB' }}>
                 ${weekTotal > 0 ? weekTotal + 'h' : '—'}
               </td>
             </tr>
@@ -206,8 +240,10 @@ export default function Timesheets() {
         </table>
 
         ${myProjects.length === 0 && html`
-          <div style=${{ padding: '48px', textAlign: 'center', color: '#6B6B80', fontSize: 14 }}>
-            No estás asignado a ningún proyecto activo.
+          <div style=${{ padding: '64px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <${SquareKanban} size=${44} strokeWidth=${1.33} color="#D1D5DB" />
+            <div style=${{ fontSize: 16, fontWeight: 600, color: '#111827' }}>No estás asignado a proyectos activos</div>
+            <div style=${{ fontSize: 14, color: '#6B7280', maxWidth: 360 }}>Hablá con tu director de cuentas para sumarte a un equipo.</div>
           </div>
         `}
       </div>

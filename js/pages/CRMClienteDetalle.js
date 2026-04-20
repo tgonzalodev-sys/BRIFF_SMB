@@ -4,30 +4,31 @@ import StatusBadge from '../components/ui/StatusBadge.js';
 import BurnBar from '../components/ui/BurnBar.js';
 import { useAppState } from '../context.js';
 import { formatARS, formatDate, initials } from '../lib/utils.js';
+import { ArrowLeft, Building2, Inbox, FileX } from 'lucide-react';
 
 const STATUS_INFO = {
-  active:   { label: 'Activo',    color: '#009966', bg: '#F0FDF4' },
-  prospect: { label: 'Prospecto', color: '#D97706', bg: '#FFFBEB' },
+  active:   { label: 'Activo',    color: '#009966', bg: '#D0FAE5' },
+  prospect: { label: 'Prospecto', color: '#FE9A00', bg: '#FEF3C6' },
   inactive: { label: 'Inactivo',  color: '#6B7280', bg: '#F3F4F6' },
 };
 
 const INDUSTRY_COLORS = {
-  'Finanzas':   { color: '#0046F3', bg: '#EEF4FF' },
-  'Alimentos':  { color: '#059669', bg: '#F0FDF4' },
-  'Tecnología': { color: '#0891B2', bg: '#ECFEFF' },
+  'Finanzas':   { color: '#0046F3', bg: '#E0E6F6' },
+  'Alimentos':  { color: '#00BC7D', bg: '#D0FAE5' },
+  'Tecnología': { color: '#00B8DB', bg: '#E0F9FF' },
 };
 
 const TYPE_INFO = {
-  campaña:  { label: 'Campaña',  color: '#7C3AED', bg: '#F5F3FF' },
-  digital:  { label: 'Digital',  color: '#0891B2', bg: '#ECFEFF' },
-  branding: { label: 'Branding', color: '#D97706', bg: '#FFFBEB' },
-  retainer: { label: 'Retainer', color: '#059669', bg: '#F0FDF4' },
+  campaña:  { label: 'Campaña',  color: '#8E51FF', bg: '#F5F3FF' },
+  digital:  { label: 'Digital',  color: '#00B8DB', bg: '#E0F9FF' },
+  branding: { label: 'Branding', color: '#FE9A00', bg: '#FEF3C6' },
+  retainer: { label: 'Retainer', color: '#00BC7D', bg: '#D0FAE5' },
 };
 
 const INVOICE_STATUS = {
-  pending: { label: 'Pendiente', color: '#D97706', bg: '#FFFBEB' },
-  issued:  { label: 'Emitida',   color: '#0046F3', bg: '#EEF4FF' },
-  paid:    { label: 'Cobrada',   color: '#009966', bg: '#F0FDF4' },
+  pending: { label: 'Pendiente', color: '#FE9A00', bg: '#FEF3C6' },
+  issued:  { label: 'Emitida',   color: '#0046F3', bg: '#E0E6F6' },
+  paid:    { label: 'Cobrada',   color: '#009966', bg: '#D0FAE5' },
 };
 
 export default function CRMClienteDetalle() {
@@ -38,7 +39,7 @@ export default function CRMClienteDetalle() {
   const client = clients.find(c => c.id === id);
   if (!client) return html`
     <div style=${{ padding: 48, textAlign: 'center', color: '#9CA3AF' }}>
-      <div style=${{ fontSize: 28, marginBottom: 8 }}>◻</div>
+      <div style=${{ marginBottom: 8, color: '#D1D5DB' }}><${Building2} size=${44} strokeWidth=${1.33} /></div>
       <div>Cliente no encontrado.</div>
       <button onClick=${() => navigate('/crm/clientes')} style=${{ marginTop: 16, background: '#0046F3', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Volver</button>
     </div>
@@ -60,7 +61,7 @@ export default function CRMClienteDetalle() {
     <div>
       <!-- Back + header -->
       <div style=${{ marginBottom: 20 }}>
-        <button onClick=${() => navigate('/crm/clientes')} style=${{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: 13, padding: 0, marginBottom: 12, fontFamily: 'inherit' }}>← Volver a Clientes</button>
+        <button onClick=${() => navigate('/crm/clientes')} style=${{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: 13, padding: 0, marginBottom: 12, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}><${ArrowLeft} size=${14} strokeWidth=${1.33} /> Volver a Clientes</button>
         <div style=${{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style=${{ width: 52, height: 52, borderRadius: 12, background: industryInfo.bg, border: '1px solid ' + industryInfo.color + '30', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: industryInfo.color, fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>
             ${client.code}
@@ -86,7 +87,7 @@ export default function CRMClienteDetalle() {
             ${[
               { label: 'Total Facturado', value: formatARS(totalBilled),  color: '#111827' },
               { label: 'Cobrado',         value: formatARS(totalPaid),    color: '#009966' },
-              { label: 'Pendiente',       value: formatARS(totalPending), color: totalPending > 0 ? '#D97706' : '#9CA3AF' },
+              { label: 'Pendiente',       value: formatARS(totalPending), color: totalPending > 0 ? '#FE9A00' : '#9CA3AF' },
             ].map(k => html`
               <div key=${k.label} style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', padding: '14px 18px' }}>
                 <div style=${{ fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>${k.label}</div>
@@ -102,7 +103,11 @@ export default function CRMClienteDetalle() {
               <span style=${{ fontSize: 12, color: '#9CA3AF' }}>${clientProjects.length} proyectos</span>
             </div>
             ${clientProjects.length === 0 ? html`
-              <div style=${{ padding: 32, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>Sin proyectos registrados.</div>
+              <div style=${{ padding: '36px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <${Inbox} size=${28} strokeWidth=${1.33} color="#D1D5DB" />
+                <div style=${{ fontSize: 13, fontWeight: 600, color: '#374151', marginTop: 2 }}>Sin proyectos</div>
+                <div style=${{ fontSize: 12, color: '#9CA3AF' }}>Este cliente aún no tiene proyectos registrados.</div>
+              </div>
             ` : clientProjects.map((p, i) => {
               const typeInfo = TYPE_INFO[p.type] || { label: p.type, color: '#6B7280', bg: '#F3F4F6' };
               return html`
@@ -130,7 +135,11 @@ export default function CRMClienteDetalle() {
               <h2 style=${{ margin: 0, fontSize: 14, fontWeight: 600, color: '#111827' }}>Historial de Facturación</h2>
             </div>
             ${clientInvoices.length === 0 ? html`
-              <div style=${{ padding: 32, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>Sin facturas registradas.</div>
+              <div style=${{ padding: '36px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <${FileX} size=${28} strokeWidth=${1.33} color="#D1D5DB" />
+                <div style=${{ fontSize: 13, fontWeight: 600, color: '#374151', marginTop: 2 }}>Sin facturas</div>
+                <div style=${{ fontSize: 12, color: '#9CA3AF' }}>No hay facturas registradas para este cliente.</div>
+              </div>
             ` : html`
               <table style=${{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>

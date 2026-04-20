@@ -1,16 +1,31 @@
+import { useState } from 'react';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
+import FilterBar from '../components/ui/FilterBar.js';
 import { useAppState } from '../context.js';
 import { formatARS, formatDate } from '../lib/utils.js';
 
 const PO_STATUS = {
-  pending: { label: 'Pendiente', color: '#D97706', bg: '#FFFBEB' },
-  issued:  { label: 'Emitida',   color: '#0046F3', bg: '#EEF4FF' },
-  paid:    { label: 'Pagada',    color: '#009966', bg: '#F0FDF4' },
+  pending: { label: 'Pendiente', color: '#FE9A00', bg: '#FEF3C6' },
+  issued:  { label: 'Emitida',   color: '#0046F3', bg: '#E0E6F6' },
+  paid:    { label: 'Pagada',    color: '#009966', bg: '#D0FAE5' },
 };
 
 export default function OrdenesCompra() {
   const { purchaseOrders, projects, suppliers } = useAppState();
+  const [search, setSearch]   = useState('');
+  const [statusF, setStatusF] = useState('');
+
+  const filteredPOs = purchaseOrders.filter(po => {
+    const supplier = suppliers.find(s => s.id === po.supplier);
+    const project  = projects.find(p => p.id === po.project);
+    const matchSearch = !search ||
+      po.code.toLowerCase().includes(search.toLowerCase()) ||
+      (supplier?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (project?.title || '').toLowerCase().includes(search.toLowerCase());
+    const matchStatus = !statusF || po.status === statusF;
+    return matchSearch && matchStatus;
+  });
 
   const totalPaid    = purchaseOrders.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
   const totalIssued  = purchaseOrders.filter(p => p.status === 'issued').reduce((s, p) => s + p.amount, 0);
@@ -34,7 +49,7 @@ export default function OrdenesCompra() {
           { label: 'Total OCs',    value: purchaseOrders.length.toString(), color: '#111827' },
           { label: 'Pagadas',      value: formatARS(totalPaid),             color: '#009966' },
           { label: 'Emitidas',     value: formatARS(totalIssued),           color: '#0046F3' },
-          { label: 'Pendientes',   value: formatARS(totalPending),          color: '#D97706' },
+          { label: 'Pendientes',   value: formatARS(totalPending),          color: '#FE9A00' },
         ].map(k => html`
           <div key=${k.label} style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', padding: '16px 20px' }}>
             <div style=${{ fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>${k.label}</div>
@@ -43,26 +58,35 @@ export default function OrdenesCompra() {
         `)}
       </div>
 
+      <${FilterBar}
+        search=${search} onSearch=${setSearch}
+        filters=${[
+          { label: 'Estado', value: statusF, onChange: setStatusF, options: [
+            { value: 'pending', label: 'Pendiente' },
+            { value: 'issued',  label: 'Emitida' },
+            { value: 'paid',    label: 'Pagada' },
+          ]},
+        ]}
+        count=${filteredPOs.length}
+      />
+
       <!-- Table -->
-      <div style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
-        <div style=${{ padding: '14px 20px', borderBottom: '1px solid #E5E7EB' }}>
-          <h2 style=${{ margin: 0, fontSize: 14, fontWeight: 600, color: '#111827' }}>Órdenes de Compra</h2>
-        </div>
+      <div style=${{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', overflow: 'hidden', marginTop: 12 }}>
         <table style=${{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
-            <tr style=${{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
+            <tr style=${{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
               ${['Código','Proveedor','Proyecto','Descripción','Fecha','Monto','Estado'].map(h => html`
                 <th key=${h} style=${{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>${h}</th>
               `)}
             </tr>
           </thead>
           <tbody>
-            ${purchaseOrders.map((po, i) => {
+            ${filteredPOs.map((po, i) => {
               const supplier = suppliers?.find(s => s.id === po.supplier);
               const project  = projects.find(p => p.id === po.project);
               const info     = PO_STATUS[po.status] || PO_STATUS.pending;
               return html`
-                <tr key=${po.id} style=${{ borderBottom: i < purchaseOrders.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
+                <tr key=${po.id} style=${{ borderBottom: i < filteredPOs.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
                   <td style=${{ padding: '14px 16px', fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: '#374151', fontWeight: 600 }}>${po.code}</td>
                   <td style=${{ padding: '14px 16px', color: '#374151', fontWeight: 500 }}>${supplier?.name || po.supplier}</td>
                   <td style=${{ padding: '14px 16px', color: '#6B7280', fontSize: 12 }}>${project?.title || '—'}</td>

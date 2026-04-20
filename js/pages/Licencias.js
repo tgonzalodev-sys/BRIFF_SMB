@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronLeft, ChevronRight, X, CalendarOff } from 'lucide-react';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
 import StatusBadge from '../components/ui/StatusBadge.js';
@@ -6,10 +7,10 @@ import { useAppState, useDispatch, useToast } from '../context.js';
 import { getMonthGrid, toISO, formatDate, formatDateShort } from '../lib/utils.js';
 
 const LEAVE_INFO = {
-  vacation:     { label: 'Vacaciones',    color: '#0046F3', bg: '#EEF4FF' },
+  vacation:     { label: 'Vacaciones',    color: '#0046F3', bg: '#E0E6F6' },
   sick:         { label: 'Enfermedad',    color: '#FF6467', bg: '#FFF0F0' },
-  personal:     { label: 'Personal',      color: '#FD9A00', bg: '#FFF7ED' },
-  compensatory: { label: 'Compensatorio', color: '#009966', bg: '#F0FDF4' },
+  personal:     { label: 'Personal',      color: '#FD9A00', bg: '#FEF3C6' },
+  compensatory: { label: 'Compensatorio', color: '#009966', bg: '#D0FAE5' },
 };
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -37,7 +38,7 @@ function NewRequestModal({ onClose, onSubmit }) {
       <div style=${{ background: '#fff', borderRadius: 12, width: '100%', maxWidth: 440, boxShadow: '0 20px 60px -10px rgba(16,24,40,0.25)', overflow: 'hidden' }}>
         <div style=${{ padding: '20px 24px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style=${{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827', fontFamily: 'Space Grotesk, sans-serif' }}>Solicitar Licencia</h2>
-          <button onClick=${onClose} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer', fontSize: 16, color: '#6B7280' }}>✕</button>
+          <button onClick=${onClose} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}><${X} size=${16} strokeWidth=${1.5} /></button>
         </div>
         <div style=${{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
@@ -150,9 +151,9 @@ export default function Licencias() {
         <!-- Monthly calendar -->
         <div style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
           <div style=${{ padding: '14px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <button onClick=${prevMonth} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 30, height: 30, cursor: 'pointer', fontSize: 16, color: '#6B7280' }}>‹</button>
+            <button onClick=${prevMonth} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 30, height: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}><${ChevronLeft} size=${16} strokeWidth=${1.33} /></button>
             <span style=${{ fontSize: 15, fontWeight: 600, color: '#111827', fontFamily: 'Space Grotesk, sans-serif' }}>${MONTH_NAMES[month]} ${year}</span>
-            <button onClick=${nextMonth} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 30, height: 30, cursor: 'pointer', fontSize: 16, color: '#6B7280' }}>›</button>
+            <button onClick=${nextMonth} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 30, height: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}><${ChevronRight} size=${16} strokeWidth=${1.33} /></button>
           </div>
 
           <div style=${{ padding: '16px 20px' }}>
@@ -174,7 +175,7 @@ export default function Licencias() {
                     <div key=${di} style=${{
                       aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       borderRadius: 8, fontSize: 13, fontWeight: isToday || leave ? 700 : 400,
-                      background: info ? info.bg : isToday ? '#EEF4FF' : 'transparent',
+                      background: info ? info.bg : isToday ? '#E0E6F6' : 'transparent',
                       color: info ? info.color : isToday ? '#0046F3' : isWeekend ? '#D1D5DB' : '#374151',
                       border: isToday ? '1.5px solid #0046F3' : '1.5px solid transparent',
                       position: 'relative',
@@ -204,7 +205,11 @@ export default function Licencias() {
             <h3 style=${{ margin: 0, fontSize: 13, fontWeight: 600, color: '#111827' }}>Mis Solicitudes</h3>
           </div>
           ${myRequests.length === 0 ? html`
-            <div style=${{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>Sin solicitudes registradas.</div>
+            <div style=${{ padding: '40px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <${CalendarOff} size=${32} strokeWidth=${1.33} color="#D1D5DB" />
+              <div style=${{ fontSize: 14, fontWeight: 600, color: '#374151', marginTop: 4 }}>Sin solicitudes</div>
+              <div style=${{ fontSize: 12, color: '#9CA3AF' }}>Todavía no registraste ninguna solicitud de licencia.</div>
+            </div>
           ` : myRequests.map((r, i) => {
             const info = LEAVE_INFO[r.type] || {};
             const same = r.start === r.end;

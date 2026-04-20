@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
 import StatusBadge from '../components/ui/StatusBadge.js';
@@ -6,10 +7,10 @@ import { useAppState, useDispatch, useToast } from '../context.js';
 import { getMonthGrid, toISO, formatDate, formatDateShort, initials } from '../lib/utils.js';
 
 const LEAVE_INFO = {
-  vacation:     { label: 'Vacaciones',    color: '#0046F3', bg: '#EEF4FF' },
+  vacation:     { label: 'Vacaciones',    color: '#0046F3', bg: '#E0E6F6' },
   sick:         { label: 'Enfermedad',    color: '#FF6467', bg: '#FFF0F0' },
-  personal:     { label: 'Personal',      color: '#FD9A00', bg: '#FFF7ED' },
-  compensatory: { label: 'Compensatorio', color: '#009966', bg: '#F0FDF4' },
+  personal:     { label: 'Personal',      color: '#FD9A00', bg: '#FEF3C6' },
+  compensatory: { label: 'Compensatorio', color: '#009966', bg: '#D0FAE5' },
 };
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -89,9 +90,9 @@ export default function LicenciasEquipo() {
         <div style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
           <!-- Month nav -->
           <div style=${{ padding: '14px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <button onClick=${prevMonth} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 30, height: 30, cursor: 'pointer', fontSize: 16, color: '#6B7280' }}>‹</button>
+            <button onClick=${prevMonth} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 30, height: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}><${ChevronLeft} size=${16} strokeWidth=${1.33} /></button>
             <span style=${{ fontSize: 15, fontWeight: 600, color: '#111827', fontFamily: 'Space Grotesk, sans-serif' }}>${MONTH_NAMES[month]} ${year}</span>
-            <button onClick=${nextMonth} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 30, height: 30, cursor: 'pointer', fontSize: 16, color: '#6B7280' }}>›</button>
+            <button onClick=${nextMonth} style=${{ background: '#F3F4F6', border: 'none', borderRadius: 6, width: 30, height: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}><${ChevronRight} size=${16} strokeWidth=${1.33} /></button>
           </div>
 
           <div style=${{ overflowX: 'auto' }}>
@@ -252,7 +253,7 @@ export default function LicenciasEquipo() {
                         <div style=${{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                           <button
                             onClick=${() => handleApprove(r.id, 'approved')}
-                            style=${{ background: '#F0FDF4', border: '1px solid #009966', color: '#009966', borderRadius: 6, padding: '4px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                            style=${{ background: '#D0FAE5', border: '1px solid #009966', color: '#009966', borderRadius: 6, padding: '4px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                           >Aprobar</button>
                           <button
                             onClick=${() => handleApprove(r.id, 'rejected')}

@@ -1,16 +1,18 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
 import StatusBadge from '../components/ui/StatusBadge.js';
 import BurnBar from '../components/ui/BurnBar.js';
+import FilterBar from '../components/ui/FilterBar.js';
 import { useAppState } from '../context.js';
 import { formatARS, formatDate, initials } from '../lib/utils.js';
 
 const TYPE_INFO = {
-  campaña:  { label: 'Campaña',  color: '#7C3AED', bg: '#F5F3FF' },
-  digital:  { label: 'Digital',  color: '#0891B2', bg: '#ECFEFF' },
-  branding: { label: 'Branding', color: '#D97706', bg: '#FFFBEB' },
-  retainer: { label: 'Retainer', color: '#059669', bg: '#F0FDF4' },
+  campaña:  { label: 'Campaña',  color: '#8E51FF', bg: '#F5F3FF' },
+  digital:  { label: 'Digital',  color: '#00B8DB', bg: '#E0F9FF' },
+  branding: { label: 'Branding', color: '#FE9A00', bg: '#FEF3C6' },
+  retainer: { label: 'Retainer', color: '#00BC7D', bg: '#D0FAE5' },
 };
 
 function TeamAvatars({ team, users, max = 4 }) {
@@ -39,6 +41,19 @@ function TeamAvatars({ team, users, max = 4 }) {
 export default function Proyectos() {
   const { projects, clients, users } = useAppState();
   const navigate = useNavigate();
+  const [search, setSearch]     = useState('');
+  const [statusF, setStatusF]   = useState('');
+  const [typeF, setTypeF]       = useState('');
+
+  const filtered = projects.filter(p => {
+    const cl = clients.find(c => c.id === p.client);
+    const matchSearch = !search ||
+      p.title.toLowerCase().includes(search.toLowerCase()) ||
+      (cl?.name || '').toLowerCase().includes(search.toLowerCase());
+    const matchStatus = !statusF || p.status === statusF;
+    const matchType   = !typeF   || p.type === typeF;
+    return matchSearch && matchStatus && matchType;
+  });
 
   const active    = projects.filter(p => p.status === 'active').length;
   const totalBudget = projects.reduce((s, p) => s + (p.budget_ars || 0), 0);
@@ -63,7 +78,7 @@ export default function Proyectos() {
           { label: 'Proyectos Activos', value: active, color: '#0046F3' },
           { label: 'Presupuesto Total', value: formatARS(totalBudget), color: '#111827' },
           { label: 'Horas Planif.', value: totalPlanned + 'h', color: '#111827' },
-          { label: 'Horas Registradas', value: totalActual + 'h', color: totalActual > totalPlanned ? '#FF6467' : '#009966' },
+          { label: 'Horas Registradas', value: totalActual + 'h', color: '#111827' },
         ].map(k => html`
           <div key=${k.label} style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', padding: '16px 20px' }}>
             <div style=${{ fontSize: 11, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>${k.label}</div>
@@ -72,22 +87,45 @@ export default function Proyectos() {
         `)}
       </div>
 
+      <${FilterBar}
+        search=${search} onSearch=${setSearch}
+        filters=${[
+          { label: 'Estado', value: statusF, onChange: setStatusF, options: [
+            { value: 'active',    label: 'Activo' },
+            { value: 'in_review', label: 'En revisión' },
+            { value: 'completed', label: 'Completado' },
+            { value: 'cancelled', label: 'Cancelado' },
+          ]},
+          { label: 'Tipo', value: typeF, onChange: setTypeF, options: [
+            { value: 'campaña',  label: 'Campaña' },
+            { value: 'digital',  label: 'Digital' },
+            { value: 'branding', label: 'Branding' },
+            { value: 'retainer', label: 'Retainer' },
+          ]},
+        ]}
+        count=${filtered.length}
+        style=${{ marginBottom: 16 }}
+      />
+
       <!-- Project cards grid -->
       <div style=${{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-        ${projects.map(project => {
+        ${filtered.map(project => {
           const client  = clients.find(c => c.id === project.client);
           const typeInfo = TYPE_INFO[project.type] || { label: project.type, color: '#6B7280', bg: '#F3F4F6' };
           return html`
             <div
               key=${project.id}
+              role="button"
+              tabIndex=${0}
               onClick=${() => navigate('/proyectos/' + project.id)}
-              style=${{ background: '#fff', borderRadius: 10, border: '1px solid #E5E7EB', padding: 24, cursor: 'pointer', transition: 'box-shadow 0.15s, transform 0.15s' }}
+              onKeyDown=${e => (e.key === 'Enter' || e.key === ' ') && navigate('/proyectos/' + project.id)}
+              style=${{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: 24, cursor: 'pointer', transition: 'box-shadow 0.15s, transform 0.15s' }}
               onMouseEnter=${e => { e.currentTarget.style.boxShadow = '0 8px 24px -4px rgba(16,24,40,0.10)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
               onMouseLeave=${e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
             >
               <!-- Top row: client + status -->
               <div style=${{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                <span style=${{ fontSize: 11, fontWeight: 700, color: client ? '#0046F3' : '#6B7280', background: '#EEF4FF', padding: '3px 10px', borderRadius: 99 }}>
+                <span style=${{ fontSize: 11, fontWeight: 700, color: client ? '#0046F3' : '#6B7280', background: '#E0E6F6', padding: '3px 10px', borderRadius: 99 }}>
                   ${client?.name || '—'}
                 </span>
                 <${StatusBadge} status=${project.status} variant="project" />

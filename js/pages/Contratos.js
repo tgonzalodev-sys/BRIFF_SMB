@@ -1,22 +1,36 @@
+import { useState } from 'react';
 import { html } from '../lib/html.js';
+import { AlertTriangle } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader.js';
+import FilterBar from '../components/ui/FilterBar.js';
 import { useAppState } from '../context.js';
 import { formatARS, formatDate } from '../lib/utils.js';
 
 const CONTRACT_STATUS = {
-  active:   { label: 'Activo',    color: '#009966', bg: '#F0FDF4' },
+  active:   { label: 'Activo',    color: '#009966', bg: '#D0FAE5' },
   expired:  { label: 'Vencido',   color: '#FF6467', bg: '#FFF0F0' },
   draft:    { label: 'Borrador',  color: '#6B7280', bg: '#F3F4F6' },
 };
 
 const CONTRACT_TYPE_COLORS = {
-  'Proyecto':  { color: '#0046F3', bg: '#EEF4FF' },
-  'Retainer':  { color: '#059669', bg: '#F0FDF4' },
-  'Servicio':  { color: '#D97706', bg: '#FFFBEB' },
+  'Proyecto':  { color: '#0046F3', bg: '#E0E6F6' },
+  'Retainer':  { color: '#00BC7D', bg: '#D0FAE5' },
+  'Servicio':  { color: '#FE9A00', bg: '#FEF3C6' },
 };
 
 export default function Contratos() {
   const { contracts, clients, rateCards } = useAppState();
+  const [search, setSearch]   = useState('');
+  const [statusF, setStatusF] = useState('');
+
+  const filteredContracts = contracts.filter(c => {
+    const client = clients.find(cl => cl.id === c.client);
+    const matchSearch = !search ||
+      c.title.toLowerCase().includes(search.toLowerCase()) ||
+      (client?.name || '').toLowerCase().includes(search.toLowerCase());
+    const matchStatus = !statusF || c.status === statusF;
+    return matchSearch && matchStatus;
+  });
 
   const totalValue    = contracts.reduce((s, c) => s + c.value, 0);
   const totalConsumed = contracts.reduce((s, c) => s + c.consumed, 0);
@@ -49,19 +63,31 @@ export default function Contratos() {
         `)}
       </div>
 
+      <${FilterBar}
+        search=${search} onSearch=${setSearch}
+        filters=${[
+          { label: 'Estado', value: statusF, onChange: setStatusF, options: [
+            { value: 'active',  label: 'Activo' },
+            { value: 'expired', label: 'Vencido' },
+            { value: 'draft',   label: 'Borrador' },
+          ]},
+        ]}
+        count=${filteredContracts.length}
+      />
+
       <!-- Contracts list -->
-      <div style=${{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        ${contracts.map(contract => {
+      <div style=${{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
+        ${filteredContracts.map(contract => {
           const client      = clients.find(c => c.id === contract.client);
           const rc          = rateCards.find(r => r.id === contract.rate_card);
           const pct         = contract.value > 0 ? Math.round((contract.consumed / contract.value) * 100) : 0;
           const remaining   = contract.value - contract.consumed;
           const statusInfo  = CONTRACT_STATUS[contract.status] || CONTRACT_STATUS.draft;
           const typeInfo    = CONTRACT_TYPE_COLORS[contract.type] || { color: '#6B7280', bg: '#F3F4F6' };
-          const barColor    = pct >= 90 ? '#FF6467' : pct >= 70 ? '#D97706' : '#0046F3';
+          const barColor    = pct >= 90 ? '#FF6467' : pct >= 70 ? '#FE9A00' : '#0046F3';
 
           return html`
-            <div key=${contract.id} style=${{ background: '#fff', borderRadius: 10, border: '1px solid #E5E7EB', padding: 24 }}>
+            <div key=${contract.id} style=${{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: 24 }}>
               <!-- Header row -->
               <div style=${{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div>
@@ -92,7 +118,7 @@ export default function Contratos() {
                 </div>
                 <div style=${{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>
                   <span>${pct}% consumido</span>
-                  ${pct >= 80 && html`<span style=${{ color: pct >= 90 ? '#FF6467' : '#D97706', fontWeight: 600 }}>${pct >= 90 ? '⚠ Casi agotado' : 'Consumo elevado'}</span>`}
+                  ${pct >= 80 && html`<span style=${{ color: pct >= 90 ? '#FF6467' : '#FE9A00', fontWeight: 600 }}>${pct >= 90 ? html`<span style=${{ display: 'flex', alignItems: 'center', gap: 3 }}><${AlertTriangle} size=${11} strokeWidth=${1.5} /> Casi agotado</span>` : 'Consumo elevado'}</span>`}
                 </div>
               </div>
             </div>
@@ -122,7 +148,7 @@ export default function Contratos() {
                   <td style=${{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>${rc.name}</td>
                   <td style=${{ padding: '12px 16px', color: '#374151' }}>${rcClient?.name || 'General'}</td>
                   <td style=${{ padding: '12px 16px' }}>
-                    <span style=${{ fontSize: 12, fontWeight: 600, color: rc.currency === 'USD' ? '#059669' : '#0046F3', background: rc.currency === 'USD' ? '#F0FDF4' : '#EEF4FF', padding: '2px 8px', borderRadius: 99 }}>${rc.currency}</span>
+                    <span style=${{ fontSize: 12, fontWeight: 600, color: rc.currency === 'USD' ? '#00BC7D' : '#0046F3', background: rc.currency === 'USD' ? '#D0FAE5' : '#E0E6F6', padding: '2px 8px', borderRadius: 99 }}>${rc.currency}</span>
                   </td>
                   <td style=${{ padding: '12px 16px', color: '#6B7280', fontSize: 12, fontFamily: 'JetBrains Mono, monospace' }}>${rc.valid_from} → ${rc.valid_to}</td>
                   <td style=${{ padding: '12px 16px', color: '#374151' }}>${rc.rates.length} roles</td>

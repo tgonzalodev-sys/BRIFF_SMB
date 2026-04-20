@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
+import FilterBar from '../components/ui/FilterBar.js';
 import { useAppState, useDispatch, useToast } from '../context.js';
 import { formatARS, initials } from '../lib/utils.js';
 
 const ROLE_INFO = {
-  Director:        { label: 'Director/a',      color: '#7C3AED', bg: '#F5F3FF' },
-  'Account Manager': { label: 'Account',       color: '#0046F3', bg: '#EEF4FF' },
-  Creative:        { label: 'Creativo/a',       color: '#D97706', bg: '#FFFBEB' },
-  Finance:         { label: 'Finanzas',         color: '#059669', bg: '#F0FDF4' },
-  Production:      { label: 'Producción',       color: '#0891B2', bg: '#ECFEFF' },
+  Director:        { label: 'Director/a',      color: '#8E51FF', bg: '#F5F3FF' },
+  'Account Manager': { label: 'Account',       color: '#0046F3', bg: '#E0E6F6' },
+  Creative:        { label: 'Creativo/a',       color: '#FE9A00', bg: '#FEF3C6' },
+  Finance:         { label: 'Finanzas',         color: '#00BC7D', bg: '#D0FAE5' },
+  Production:      { label: 'Producción',       color: '#00B8DB', bg: '#E0F9FF' },
 };
 
 const CONTRACT_TYPES = ['Relación de Dependencia', 'Monotributo', 'Factura Empresa'];
@@ -21,7 +22,7 @@ function NewPersonaModal({ typologies, onSave, onClose }) {
     contract_type: CONTRACT_TYPES[0],
   });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const colors = ['#2A2AFF','#7C3AED','#059669','#D97706','#DC2626','#0891B2','#0046F3','#374151'];
+  const colors = ['#0046F3','#8E51FF','#00BC7D','#FE9A00','#FF2056','#00B8DB','#0046F3','#374151'];
   const avatar_color = colors[Math.floor(Math.random() * colors.length)];
 
   return html`
@@ -40,25 +41,25 @@ function NewPersonaModal({ typologies, onSave, onClose }) {
                 placeholder=${f.placeholder}
                 value=${form[f.key]}
                 onChange=${e => set(f.key, e.target.value)}
-                style=${{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid #D1D5DB', borderRadius: 7, fontSize: 13, fontFamily: 'inherit' }}
+                style=${{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid #D1D5DB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit' }}
               />
             </div>
           `)}
           <div style=${{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style=${{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 5 }}>Typología</label>
-              <select value=${form.typology} onChange=${e => set('typology', e.target.value)} style=${{ width: '100%', padding: '8px 10px', border: '1px solid #D1D5DB', borderRadius: 7, fontSize: 13, fontFamily: 'inherit', background: '#fff' }}>
+              <select value=${form.typology} onChange=${e => set('typology', e.target.value)} style=${{ width: '100%', padding: '8px 10px', border: '1px solid #D1D5DB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: '#fff' }}>
                 ${typologies.map(t => html`<option key=${t.id} value=${t.name}>${t.name}</option>`)}
               </select>
             </div>
             <div>
               <label style=${{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 5 }}>Costo/hora (ARS)</label>
-              <input type="number" value=${form.hourly_cost} onChange=${e => set('hourly_cost', e.target.value)} placeholder="50000" style=${{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid #D1D5DB', borderRadius: 7, fontSize: 13, fontFamily: 'inherit' }} />
+              <input type="number" value=${form.hourly_cost} onChange=${e => set('hourly_cost', e.target.value)} placeholder="50000" style=${{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid #D1D5DB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit' }} />
             </div>
           </div>
           <div>
             <label style=${{ display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 5 }}>Tipo de Contrato</label>
-            <select value=${form.contract_type} onChange=${e => set('contract_type', e.target.value)} style=${{ width: '100%', padding: '8px 10px', border: '1px solid #D1D5DB', borderRadius: 7, fontSize: 13, fontFamily: 'inherit', background: '#fff' }}>
+            <select value=${form.contract_type} onChange=${e => set('contract_type', e.target.value)} style=${{ width: '100%', padding: '8px 10px', border: '1px solid #D1D5DB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: '#fff' }}>
               ${CONTRACT_TYPES.map(c => html`<option key=${c} value=${c}>${c}</option>`)}
             </select>
           </div>
@@ -84,12 +85,16 @@ export default function Personas() {
   const toast    = useToast();
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch]       = useState('');
+  const [roleF, setRoleF]         = useState('');
 
-  const filtered = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.typology.toLowerCase().includes(search.toLowerCase()) ||
-    u.dept.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = users.filter(u => {
+    const matchSearch = !search ||
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.typology.toLowerCase().includes(search.toLowerCase()) ||
+      u.dept.toLowerCase().includes(search.toLowerCase());
+    const matchRole = !roleF || u.role === roleF;
+    return matchSearch && matchRole;
+  });
 
   function handleAdd(user) {
     dispatch({ type: 'ADD_USER', user });
@@ -120,7 +125,7 @@ export default function Personas() {
       <div style=${{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
         ${[
           { label: 'Total equipo',     value: users.length.toString(),   color: '#111827' },
-          { label: 'Utilización media', value: avgUtil + '%',            color: avgUtil >= 70 ? '#009966' : '#D97706' },
+          { label: 'Utilización media', value: avgUtil + '%',            color: avgUtil >= 70 ? '#009966' : '#FE9A00' },
           { label: 'Horas facturables', value: totalBillable + 'h',     color: '#0046F3' },
           { label: 'Typologías',        value: typologies.length.toString(), color: '#111827' },
         ].map(k => html`
@@ -131,16 +136,20 @@ export default function Personas() {
         `)}
       </div>
 
-      <!-- Search -->
-      <div style=${{ marginBottom: 16 }}>
-        <input
-          type="text"
-          placeholder="Buscar por nombre, typología o área..."
-          value=${search}
-          onChange=${e => setSearch(e.target.value)}
-          style=${{ width: '100%', boxSizing: 'border-box', padding: '9px 14px', border: '1px solid #E5E7EB', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: '#fff', outline: 'none' }}
-        />
-      </div>
+      <${FilterBar}
+        search=${search} onSearch=${setSearch}
+        placeholder="Buscar por nombre, typología o área…"
+        filters=${[
+          { label: 'Rol', value: roleF, onChange: setRoleF, options: [
+            { value: 'Director',        label: 'Director/a' },
+            { value: 'Account Manager', label: 'Account' },
+            { value: 'Creative',        label: 'Creativo/a' },
+            { value: 'Finance',         label: 'Finanzas' },
+            { value: 'Production',      label: 'Producción' },
+          ]},
+        ]}
+        count=${filtered.length}
+      />
 
       <!-- Team table -->
       <div style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
@@ -202,9 +211,9 @@ export default function Personas() {
                   <td style=${{ padding: '14px 16px', minWidth: 140 }}>
                     <div style=${{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style=${{ flex: 1, height: 6, borderRadius: 99, background: '#E5E7EB', overflow: 'hidden' }}>
-                        <div style=${{ height: '100%', width: Math.min(pct, 100) + '%', background: pct >= 70 ? '#009966' : pct >= 50 ? '#D97706' : '#FF6467', borderRadius: 99, transition: 'width 0.4s' }} />
+                        <div style=${{ height: '100%', width: Math.min(pct, 100) + '%', background: pct >= 70 ? '#009966' : pct >= 50 ? '#FE9A00' : '#FF6467', borderRadius: 99, transition: 'width 0.4s' }} />
                       </div>
-                      <span style=${{ fontSize: 12, fontWeight: 700, color: pct >= 70 ? '#009966' : pct >= 50 ? '#D97706' : '#FF6467', minWidth: 36, textAlign: 'right' }}>${pct}%</span>
+                      <span style=${{ fontSize: 12, fontWeight: 700, color: pct >= 70 ? '#009966' : pct >= 50 ? '#FE9A00' : '#FF6467', minWidth: 36, textAlign: 'right' }}>${pct}%</span>
                     </div>
                     ${util && html`<div style=${{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>${util.billable}h fact. / ${util.available_hours}h disp.</div>`}
                   </td>

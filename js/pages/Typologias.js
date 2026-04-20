@@ -4,11 +4,11 @@ import { useAppState } from '../context.js';
 import { formatARS } from '../lib/utils.js';
 
 const DEPT_COLORS = {
-  'Dirección':   { color: '#7C3AED', bg: '#F5F3FF' },
-  'Cuentas':     { color: '#0046F3', bg: '#EEF4FF' },
-  'Creatividad': { color: '#D97706', bg: '#FFFBEB' },
-  'Finanzas':    { color: '#059669', bg: '#F0FDF4' },
-  'Producción':  { color: '#0891B2', bg: '#ECFEFF' },
+  'Dirección':   { color: '#8E51FF', bg: '#F5F3FF' },
+  'Cuentas':     { color: '#0046F3', bg: '#E0E6F6' },
+  'Creatividad': { color: '#FE9A00', bg: '#FEF3C6' },
+  'Finanzas':    { color: '#00BC7D', bg: '#D0FAE5' },
+  'Producción':  { color: '#00B8DB', bg: '#E0F9FF' },
 };
 
 export default function Typologias() {
@@ -98,9 +98,9 @@ export default function Typologias() {
                   <td style=${{ padding: '14px 16px' }}>
                     <div style=${{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style=${{ width: 80, height: 6, borderRadius: 99, background: '#E5E7EB', overflow: 'hidden' }}>
-                        <div style=${{ height: '100%', width: margin + '%', background: margin >= 35 ? '#009966' : '#D97706', borderRadius: 99 }} />
+                        <div style=${{ height: '100%', width: margin + '%', background: margin >= 35 ? '#009966' : '#FE9A00', borderRadius: 99 }} />
                       </div>
-                      <span style=${{ fontSize: 12, fontWeight: 700, color: margin >= 35 ? '#009966' : '#D97706' }}>${margin}%</span>
+                      <span style=${{ fontSize: 12, fontWeight: 700, color: margin >= 35 ? '#009966' : '#FE9A00' }}>${margin}%</span>
                     </div>
                   </td>
                   <td style=${{ padding: '14px 16px', textAlign: 'right' }}>

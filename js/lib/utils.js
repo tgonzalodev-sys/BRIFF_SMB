@@ -16,6 +16,9 @@ export function formatPct(n) {
 }
 
 // ── Date utilities ────────────────────────────────────────────────────────────
+// Single source of truth for "today" in the demo — bump here to advance the demo date
+export const TODAY = '2026-04-17';
+
 export function getWeekRange(date = new Date()) {
   const d = new Date(date);
   const day = d.getDay(); // 0=Sun
@@ -72,7 +75,7 @@ export function formatWeekLabel(date) {
 }
 
 export function formatTimeAgo(isoStr) {
-  const now = new Date('2026-04-17T12:00:00');
+  const now = new Date(TODAY + 'T12:00:00');
   const then = new Date(isoStr);
   const mins = Math.round((now - then) / 60000);
   if (mins < 60) return `hace ${mins} min`;
@@ -83,7 +86,8 @@ export function formatTimeAgo(isoStr) {
 }
 
 // ── Avatar color from name ────────────────────────────────────────────────────
-const AVATAR_COLORS = ['#2A2AFF','#7C3AED','#059669','#D97706','#DC2626','#0891B2','#BE185D','#065F46'];
+// Uses Tailwind-v4 500 palette colors that are all in the design system
+const AVATAR_COLORS = ['#8E51FF', '#00BC7D', '#FE9A00', '#FF2056', '#00B8DB', '#E12AFB', '#0046F3', '#FF8041'];
 export function avatarColorFromName(name) {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -96,34 +100,35 @@ export function initials(name) {
 
 // ── Status labels ─────────────────────────────────────────────────────────────
 export const PROJECT_STATUS = {
-  active:      { label: 'Activo',       color: '#2A2AFF', bg: '#EEF0FF' },
-  in_review:   { label: 'En Revisión',  color: '#FF6B2B', bg: '#FFF0EB' },
-  completed:   { label: 'Completado',   color: '#6B6B80', bg: '#F0F0F5' },
-  draft:       { label: 'Borrador',     color: '#6B6B80', bg: '#F0F0F5' },
-  cancelled:   { label: 'Cancelado',    color: '#FF3B3B', bg: '#FFECEC' },
+  active:      { label: 'Activo',       color: '#0046F3', bg: '#E0E6F6' },
+  in_review:   { label: 'En Revisión',  color: '#FF8041', bg: '#FEF3C6' },
+  completed:   { label: 'Completado',   color: '#6B7280', bg: '#F3F4F6' },
+  paused:      { label: 'En pausa',     color: '#6B7280', bg: '#F3F4F6' },
+  draft:       { label: 'Borrador',     color: '#6B7280', bg: '#F3F4F6' },
+  cancelled:   { label: 'Cancelado',    color: '#FF6467', bg: '#FFE2E2' },
 };
 
 export const ESTIMATE_STATUS = {
-  draft:              { label: 'Borrador',              color: '#6B6B80', bg: '#F0F0F5' },
-  internal_review:    { label: 'En Revisión',           color: '#FF6B2B', bg: '#FFF0EB' },
-  approved_internal:  { label: 'Aprobada Internamente', color: '#059669', bg: '#F0FDF4' },
-  sent_client:        { label: 'Enviada al Cliente',    color: '#2A2AFF', bg: '#EEF0FF' },
-  approved_client:    { label: 'Aprobada',              color: '#0A0A0A', bg: '#CCFF44' },
-  rejected:           { label: 'Rechazada',             color: '#FF3B3B', bg: '#FFECEC' },
+  draft:              { label: 'Borrador',              color: '#6B7280', bg: '#F3F4F6' },
+  internal_review:    { label: 'En Revisión',           color: '#FF8041', bg: '#FEF3C6' },
+  approved_internal:  { label: 'Aprobada Internamente', color: '#009966', bg: '#D0FAE5' },
+  sent_client:        { label: 'Enviada al Cliente',    color: '#0046F3', bg: '#E0E6F6' },
+  approved_client:    { label: 'Aprobada',              color: '#007A55', bg: '#D0FAE5' },
+  rejected:           { label: 'Rechazada',             color: '#FF6467', bg: '#FFE2E2' },
 };
 
 export const INVOICE_STATUS = {
-  pending: { label: 'Pendiente', color: '#FF6B2B', bg: '#FFF0EB' },
-  issued:  { label: 'Emitida',   color: '#2A2AFF', bg: '#EEF0FF' },
-  paid:    { label: 'Pagada',    color: '#0A0A0A', bg: '#CCFF44' },
-  void:    { label: 'Anulada',   color: '#FF3B3B', bg: '#FFECEC' },
+  pending: { label: 'Pendiente', color: '#FF8041', bg: '#FEF3C6' },
+  issued:  { label: 'Emitida',   color: '#0046F3', bg: '#E0E6F6' },
+  paid:    { label: 'Pagada',    color: '#007A55', bg: '#D0FAE5' },
+  void:    { label: 'Anulada',   color: '#FF6467', bg: '#FFE2E2' },
 };
 
 export const TIMESHEET_STATUS = {
-  draft:    { label: 'Borrador',  color: '#6B6B80', bg: '#F0F0F5' },
-  pending:  { label: 'Pendiente', color: '#FF6B2B', bg: '#FFF0EB' },
-  approved: { label: 'Aprobado',  color: '#0A0A0A', bg: '#CCFF44' },
-  rejected: { label: 'Rechazado', color: '#FF3B3B', bg: '#FFECEC' },
+  draft:    { label: 'Borrador',  color: '#6B7280', bg: '#F3F4F6' },
+  pending:  { label: 'Pendiente', color: '#FF8041', bg: '#FEF3C6' },
+  approved: { label: 'Aprobado',  color: '#007A55', bg: '#D0FAE5' },
+  rejected: { label: 'Rechazado', color: '#FF6467', bg: '#FFE2E2' },
 };
 
 export const LEAVE_TYPE = {
@@ -134,24 +139,24 @@ export const LEAVE_TYPE = {
 };
 
 export const LEAVE_STATUS = {
-  approved: { label: 'Aprobada',  color: '#2A2AFF', bg: '#EEF0FF' },
-  pending:  { label: 'Pendiente', color: '#FF6B2B', bg: '#FFF0EB' },
-  rejected: { label: 'Rechazada', color: '#FF3B3B', bg: '#FFECEC' },
+  approved: { label: 'Aprobada',  color: '#009966', bg: '#D0FAE5' },
+  pending:  { label: 'Pendiente', color: '#FF8041', bg: '#FEF3C6' },
+  rejected: { label: 'Rechazada', color: '#FF6467', bg: '#FFE2E2' },
 };
 
 export const TASK_STATUS = {
-  done:        { label: 'Completada',   color: '#059669', bg: '#F0FDF4' },
-  in_progress: { label: 'En Progreso',  color: '#2A2AFF', bg: '#EEF0FF' },
-  pending:     { label: 'Pendiente',    color: '#6B6B80', bg: '#F0F0F5' },
+  done:        { label: 'Completada',   color: '#009966', bg: '#D0FAE5' },
+  in_progress: { label: 'En Progreso',  color: '#0046F3', bg: '#E0E6F6' },
+  pending:     { label: 'Pendiente',    color: '#6B7280', bg: '#F3F4F6' },
 };
 
 export const CRM_STAGES = {
-  prospect:    { label: 'Prospecto',    color: '#6B6B80' },
-  qualified:   { label: 'Calificado',   color: '#0891B2' },
-  proposal:    { label: 'Propuesta',    color: '#7C3AED' },
-  negotiation: { label: 'Negociación',  color: '#FF6B2B' },
-  won:         { label: 'Ganado',       color: '#0A0A0A', bg: '#CCFF44' },
-  lost:        { label: 'Perdido',      color: '#FF3B3B', bg: '#FFECEC' },
+  prospect:    { label: 'Prospecto',    color: '#6B7280' },
+  qualified:   { label: 'Calificado',   color: '#00B8DB' },
+  proposal:    { label: 'Propuesta',    color: '#8E51FF' },
+  negotiation: { label: 'Negociación',  color: '#FF8041' },
+  won:         { label: 'Ganado',       color: '#007A55', bg: '#C6EE6A' },
+  lost:        { label: 'Perdido',      color: '#FF6467', bg: '#FFE2E2' },
 };
 
 // ── Permissions ───────────────────────────────────────────────────────────────

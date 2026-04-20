@@ -1,19 +1,30 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { html } from '../lib/html.js';
 import PageHeader from '../components/ui/PageHeader.js';
+import FilterBar from '../components/ui/FilterBar.js';
 import { useAppState } from '../context.js';
 import { formatDate } from '../lib/utils.js';
+import { ArrowLeft, SearchX } from 'lucide-react';
 
 const TENDER_STATUS = {
   draft:       { label: 'Borrador',    color: '#6B7280', bg: '#F3F4F6' },
-  open:        { label: 'Abierta',     color: '#0046F3', bg: '#EEF4FF' },
-  adjudicated: { label: 'Adjudicada',  color: '#009966', bg: '#F0FDF4' },
+  open:        { label: 'Abierta',     color: '#0046F3', bg: '#E0E6F6' },
+  adjudicated: { label: 'Adjudicada',  color: '#009966', bg: '#D0FAE5' },
   cancelled:   { label: 'Cancelada',   color: '#FF6467', bg: '#FFF0F0' },
 };
 
 export default function Licitaciones() {
   const navigate = useNavigate();
   const { tenders, projects, suppliers, estimates } = useAppState();
+  const [search, setSearch]   = useState('');
+  const [statusF, setStatusF] = useState('');
+
+  const filteredTenders = tenders.filter(t => {
+    const matchSearch = !search || t.title.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = !statusF || t.status === statusF;
+    return matchSearch && matchStatus;
+  });
 
   return html`
     <div>
@@ -24,8 +35,8 @@ export default function Licitaciones() {
           <div style=${{ display: 'flex', gap: 8 }}>
             <button
               onClick=${() => navigate('/proveedores')}
-              style=${{ background: '#F3F4F6', color: '#374151', border: '1px solid #E5E7EB', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-            >← Proveedores</button>
+              style=${{ background: '#F3F4F6', color: '#374151', border: '1px solid #E5E7EB', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
+            ><${ArrowLeft} size=${14} strokeWidth=${1.33} /> Proveedores</button>
             <button style=${{ background: '#0046F3', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif' }}>
               + Nueva Licitación
             </button>
@@ -48,14 +59,29 @@ export default function Licitaciones() {
         `)}
       </div>
 
+      <${FilterBar}
+        search=${search} onSearch=${setSearch}
+        filters=${[
+          { label: 'Estado', value: statusF, onChange: setStatusF, options: [
+            { value: 'draft',       label: 'Borrador' },
+            { value: 'open',        label: 'Abierta' },
+            { value: 'adjudicated', label: 'Adjudicada' },
+            { value: 'cancelled',   label: 'Cancelada' },
+          ]},
+        ]}
+        count=${filteredTenders.length}
+      />
+
       <!-- Tenders list -->
-      ${tenders.length === 0 ? html`
-        <div style=${{ background: '#fff', borderRadius: 8, border: '1px solid #E5E7EB', padding: 48, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>
-          Sin licitaciones registradas.
+      ${filteredTenders.length === 0 ? html`
+        <div style=${{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '56px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 12 }}>
+          <${SearchX} size=${36} strokeWidth=${1.33} color="#D1D5DB" />
+          <div style=${{ fontSize: 15, fontWeight: 600, color: '#374151', marginTop: 4 }}>Sin resultados</div>
+          <div style=${{ fontSize: 13, color: '#9CA3AF' }}>No hay licitaciones que coincidan con los filtros aplicados.</div>
         </div>
       ` : html`
-        <div style=${{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          ${tenders.map(tender => {
+        <div style=${{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
+          ${filteredTenders.map(tender => {
             const project  = projects.find(p => p.id === tender.project);
             const invited  = tender.suppliers_invited.map(sid => suppliers.find(s => s.id === sid)).filter(Boolean);
             const info     = TENDER_STATUS[tender.status] || TENDER_STATUS.draft;
@@ -64,8 +90,11 @@ export default function Licitaciones() {
             return html`
               <div
                 key=${tender.id}
+                role="button"
+                tabIndex=${0}
                 onClick=${() => navigate('/proveedores/licitaciones/' + tender.id)}
-                style=${{ background: '#fff', borderRadius: 10, border: '1px solid #E5E7EB', padding: 22, cursor: 'pointer', transition: 'box-shadow 0.15s, transform 0.15s' }}
+                onKeyDown=${e => (e.key === 'Enter' || e.key === ' ') && navigate('/proveedores/licitaciones/' + tender.id)}
+                style=${{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: 22, cursor: 'pointer', transition: 'box-shadow 0.15s, transform 0.15s' }}
                 onMouseEnter=${e => { e.currentTarget.style.boxShadow = '0 4px 16px -4px rgba(16,24,40,0.10)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
                 onMouseLeave=${e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
               >
